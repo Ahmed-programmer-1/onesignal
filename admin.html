@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>OneSignal Notification Lab — الإدارة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f17;--bg2:#121826;--card:#182033;--line:#27324a;--tx:#e8eefc;--mut:#8f9db8;--pri:#5b8cff;--pri2:#8b5cff;--ok:#2ea66a;--warn:#e3a33b;--err:#e5584f;--info:#4aa3d8;--r:14px}
+:root[data-theme=light]{--bg:#f3f5fa;--bg2:#fff;--card:#fff;--line:#dbe1ee;--tx:#18202e;--mut:#5d6a7e}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Tajawal',system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+input,select,textarea{font:inherit;width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-size:.85rem;color:var(--mut);margin:10px 0 4px}
+.btn{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;padding:8px 16px;border-radius:10px;font-weight:700}
+.btn.sec{background:var(--card);color:var(--tx);border:1px solid var(--line)}
+.btn.dng{background:var(--err)}.btn.sm{padding:4px 10px;font-size:.8rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.hint{color:var(--mut);font-size:.85rem}
+code,pre{direction:ltr;text-align:left;font-family:ui-monospace,monospace;font-size:.8rem}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;overflow:auto;white-space:pre-wrap;max-height:320px}
+#prog{position:fixed;top:0;inset-inline:0;height:3px;background:linear-gradient(90deg,var(--pri),var(--pri2));transform:scaleX(0);transform-origin:right;transition:.3s;z-index:200}
+#prog.on{transform:scaleX(.8)}
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.lbox{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px}
+.lbox h1{font-size:1.4rem;margin-bottom:4px}
+.warnbox{border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:.82rem;margin:12px 0}
+.err{color:var(--err);font-size:.88rem;min-height:22px;margin-top:8px}
+/* shell */
+#app{display:none;min-height:100vh;grid-template-columns:240px 1fr}
+#app.on{display:grid}
+#app.collapsed{grid-template-columns:64px 1fr}
+aside{background:var(--bg2);border-inline-end:1px solid var(--line);padding:12px;position:sticky;top:0;height:100vh;overflow:auto}
+aside .brand{font-weight:800;margin:4px 6px 12px;white-space:nowrap;overflow:hidden}
+aside a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;color:var(--mut);cursor:pointer;margin-bottom:3px;white-space:nowrap;overflow:hidden}
+aside a.on,aside a:hover{background:var(--card);color:var(--tx)}
+#app.collapsed aside .lbl,#app.collapsed aside .brand span{display:none}
+.main{min-width:0}
+.bar{display:flex;gap:10px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--bg2);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.bar .sp{flex:1}
+.content{padding:18px;max-width:1300px;min-width:0}
+.tab{display:none}.tab.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.card h3{font-size:1.05rem;margin-bottom:10px}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.kpi small{color:var(--mut)}.kpi b{display:block;font-size:1.6rem}
+.st{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 9px;border-radius:99px;border:1px solid;white-space:nowrap}
+.st.live{color:var(--ok)}.st.setup{color:var(--warn)}.st.no{color:var(--err)}.st.demo{color:var(--info)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
+th{color:var(--mut);font-weight:500;white-space:nowrap}
+.tw{overflow:auto}
+.phone{width:260px;margin:0 auto;border:6px solid #000;border-radius:28px;padding:34px 10px 24px;background:linear-gradient(#3a4a6b,#1c2438)}
+.desk{margin-top:14px;max-width:360px}
+.pv{background:#fff;color:#111;border-radius:12px;padding:10px;display:flex;gap:10px;direction:rtl;text-align:right;box-shadow:0 4px 14px #0005}
+.pv img{width:38px;height:38px;border-radius:8px;object-fit:cover;background:#ddd}
+.pv .pi{width:100%;margin-top:6px;border-radius:8px;max-height:110px;object-fit:cover}
+.pv b{display:block;font-size:.9rem}.pv span{font-size:.8rem;color:#444}
+.pv small{color:#888;font-size:.7rem}
+.mod{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:150;padding:14px}
+.mod.on{display:grid}
+.mod .box{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);width:min(560px,100%);max-height:88vh;overflow:auto;padding:18px}
+#toasts{position:fixed;bottom:16px;inset-inline-start:16px;display:grid;gap:8px;z-index:300;width:min(360px,calc(100% - 32px))}
+.toast{background:var(--bg2);border:1px solid var(--line);border-inline-start:4px solid var(--info);border-radius:10px;padding:10px 12px;font-size:.88rem;box-shadow:0 6px 20px #0005}
+.toast.ok{border-inline-start-color:var(--ok)}.toast.bad{border-inline-start-color:var(--err)}
+.opts{display:flex;gap:6px;flex-wrap:wrap}
+.opts label{margin:0;display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--line);padding:5px 10px;border-radius:99px;color:var(--tx);cursor:pointer}
+.opts input{width:auto}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ft{border:1px dashed var(--line);border-radius:10px;padding:8px;margin-top:6px}
+@media(max-width:900px){#app,#app.collapsed{grid-template-columns:1fr}aside{position:fixed;z-index:90;width:240px;transform:translateX(100%);transition:.2s;inset-inline-start:0;top:0;visibility:hidden}[dir=rtl] aside{transform:translateX(100%)}#app.mob aside{transform:none;visibility:visible}.g2,.g3{grid-template-columns:1fr}#app.collapsed .lbl{display:inline!important}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<div id="toasts"></div>
+
+<!-- ===== تسجيل الدخول ===== -->
+<div id="login">
+ <form class="lbox" id="lf" autocomplete="off">
+  <h1>OneSignal Notification Lab</h1>
+  <p class="hint">لوحة الإدارة — تسجيل الدخول</p>
+  <div class="warnbox" id="lmode">⚠️ قفل تجريبي غير آمن: يعمل في المتصفح فقط ولا يحمي أي مفاتيح أو عمليات إدارية. بيانات الدخول المطلوبة مخصصة للاختبار فقط ولا تصلح للإنتاج. التحقق الحقيقي يحدث على الخادم عند ضبط الوسيط الآمن.</div>
+  <details id="sbBox" style="margin-top:10px"><summary class="hint" style="cursor:pointer">🔗 ربط Supabase (مرة واحدة)</summary>
+   <label for="lsu">عنوان مشروع Supabase</label><input id="lsu" dir="ltr" placeholder="https://xxxx.supabase.co">
+   <label for="lsk">مفتاح anon / publishable (العام فقط)</label><input id="lsk" dir="ltr" placeholder="eyJ… أو sb_publishable_…">
+   <p class="hint" style="margin-top:6px">لا تضع هنا مفتاح service_role أو sb_secret — سيُرفض.</p></details>
+  <label for="lu">البريد الإلكتروني (أو اسم المستخدم في القفل التجريبي)</label><input id="lu" required autocomplete="username">
+  <label for="lp">كلمة المرور</label><input id="lp" type="password" required autocomplete="current-password">
+  <div class="err" id="le"></div>
+  <button class="btn" style="width:100%;margin-top:8px" id="lb">دخول</button>
+ </form>
+</div>
+
+<!-- ===== التطبيق ===== -->
+<div id="app">
+ <aside id="side">
+  <div class="brand">🔔 <span>Notification Lab</span></div>
+  <div id="nav"></div>
+ </aside>
+ <div class="main">
+  <div class="bar">
+   <button class="btn sec sm" onclick="toggleSide()" aria-label="القائمة">☰</button>
+   <b id="ttl"></b>
+   <span class="sp"></span>
+   <span id="connBadge"></span>
+   <span class="hint" id="who"></span>
+   <button class="btn sec sm" onclick="toggleTheme()">◐ السمة</button>
+   <button class="btn sec sm" onclick="logout()">خروج</button>
+  </div>
+  <div class="content">
+
+  <!-- Dashboard -->
+  <section class="tab" id="t-dash">
+   <div class="card"><div class="row" style="margin:0">
+     <span id="dashMode"></span>
+     <select id="dPer" style="width:auto" onchange="drawDash()"><option value="7">آخر 7 أيام</option><option value="14">آخر 14 يومًا</option><option value="30">آخر 30 يومًا</option></select>
+     <select id="dCamp" style="width:auto" onchange="drawDash()"><option value="">كل الحملات</option></select>
+     <button class="btn sm" onclick="loadLive()">تحديث من OneSignal</button>
+   </div></div>
+   <div class="grid g4" id="kpis"></div>
+   <div class="card" style="margin-top:16px"><h3>الإرسال والتفاعل عبر الزمن</h3><div id="chart"></div></div>
+   <div class="card"><h3>آخر العمليات والأخطاء</h3><div class="tw" id="dashLog"></div></div>
+  </section>
+
+  <!-- Notifications -->
+  <section class="tab" id="t-notif">
+   <div class="grid g2">
+    <div>
+     <div class="card"><h3>محتوى الإشعار <span class="st live">يُرسل فعليًا عبر الوسيط</span></h3>
+      <label>العنوان *</label><input id="nT" maxlength="100" oninput="pv()">
+      <label>نص الرسالة *</label><textarea id="nB" maxlength="500" oninput="pv()"></textarea>
+      <div class="row" style="margin:0"><button class="btn sec sm" onclick="insVar()">+ متغير ديناميكي</button><span class="hint">يعتمد على ميزة التخصيص في OneSignal — تحقق من خطتك.</span></div>
+      <div class="grid g2"><div><label>رابط الوجهة (https)</label><input id="nU" dir="ltr" placeholder="https://example.com/video/1"></div>
+      <div><label>أيقونة (https)</label><input id="nI" dir="ltr" oninput="pv()"></div></div>
+      <label>صورة كبيرة (https) — تدعمها بعض المتصفحات فقط</label><input id="nG" dir="ltr" oninput="pv()">
+      <label>بيانات إضافية data (JSON)</label><textarea id="nD" dir="ltr" placeholder='{"video_id":"1"}'></textarea>
+     </div>
+     <div class="card"><h3>الجمهور المستهدف</h3>
+      <div class="opts" id="tgOpts">
+       <label><input type="radio" name="tg" value="all" checked onchange="tgUI()">كل المشتركين</label>
+       <label><input type="radio" name="tg" value="segment" onchange="tgUI()">شريحة محفوظة</label>
+       <label><input type="radio" name="tg" value="tag" onchange="tgUI()">وسم Tag</label>
+       <label><input type="radio" name="tg" value="section" onchange="tgUI()">زار قسمًا</label>
+       <label><input type="radio" name="tg" value="geo" onchange="tgUI()">لغة/دولة</label>
+       <label><input type="radio" name="tg" value="ext" onchange="tgUI()">External ID</label>
+      </div>
+      <div id="tgBody"></div>
+      <p class="hint" style="margin-top:8px">«كل المشتركين» يستخدم الشريحة الافتراضية <code>Subscribed Users</code>. الاستهداف عبر Tags/اللغة/الدولة يستعمل <code>filters</code> الرسمية. لا يمكن خلط filters مع شرائح أو aliases في طلب واحد.</p>
+     </div>
+     <div class="card"><h3>الجدولة والتوقيت</h3>
+      <div class="opts">
+       <label><input type="radio" name="sm" value="now" checked onchange="smUI()">الآن</label>
+       <label><input type="radio" name="sm" value="at" onchange="smUI()">وقت محدد</label>
+       <label><input type="radio" name="sm" value="local" onchange="smUI()">وقت محلي لكل مستخدم</label>
+      </div>
+      <div id="smBody"></div>
+      <p class="hint" id="smInfo" style="margin-top:8px"></p>
+      <p class="hint">الإرسال مرة واحدة فقط. الحملات المتكررة <span class="st no">غير مدعومة عبر API</span> (استخدم Journeys في لوحة OneSignal أو مجدولًا خارجيًا). الجدولة تتم على خوادم OneSignal، فهي تستمر بعد إغلاق المتصفح.</p>
+     </div>
+     <div class="card"><div class="row" style="margin:0">
+      <button class="btn sec" onclick="doSend('test')">إرسال تجريبي</button>
+      <button class="btn" id="bSend" onclick="doSend('send')">إرسال الآن</button>
+      <button class="btn" id="bSched" onclick="doSend('sched')">جدولة</button>
+      <button class="btn sec" onclick="saveDraft()">حفظ كمسودة</button>
+      <button class="btn sec" onclick="saveTplFromForm()">حفظ كقالب</button>
+      <button class="btn sec" onclick="pv(true)">معاينة</button>
+     </div>
+     <div id="testBox" style="margin-top:10px"><label>هدف الإرسال التجريبي: External ID أو Subscription ID</label><input id="nTest" dir="ltr" placeholder="مثال: user-123 أو UUID للاشتراك"></div>
+     <p class="hint" style="margin-top:8px">كل عملية إرسال تطلب تأكيدًا، وتحمل <code>idempotency_key</code> لمنع التكرار عند إعادة المحاولة.</p></div>
+    </div>
+    <div>
+     <div class="card"><h3>المعاينة (عربي RTL)</h3>
+      <p class="hint">معاينة تقريبية لشكل الإشعار، وشكله الفعلي يختلف حسب المتصفح ونظام التشغيل.</p>
+      <div class="phone"><div id="pvPhone"></div></div>
+      <div class="desk" id="pvDesk"></div>
+     </div>
+     <div class="card"><h3>الحمولة المرسلة (JSON)</h3><pre id="pj">—</pre></div>
+    </div>
+   </div>
+  </section>
+
+  <!-- Segments -->
+  <section class="tab" id="t-seg">
+   <div class="card"><h3>منشئ الشرائح</h3>
+    <div class="grid g2"><div><label>الاسم</label><input id="sN"></div><div><label>الوصف (محلي)</label><input id="sD"></div></div>
+    <div id="sRows"></div>
+    <div class="row"><button class="btn sec sm" onclick="addSR()">+ شرط</button>
+     <span class="hint">الشروط المتتالية تُربط بـ AND افتراضيًا؛ اختر OR لفصل الفروع (فروع OR منفصلة).</span></div>
+    <div class="row"><button class="btn sec" onclick="saveSegLocal()">حفظ محليًا</button>
+     <button class="btn" onclick="saveSegRemote()">إنشاء في OneSignal (عبر الوسيط)</button></div>
+    <p class="hint" style="margin-top:8px">حجم الجمهور المتوقع: <span class="st no">غير متاح عبر API</span> — راجع حجم الشريحة في لوحة OneSignal.</p>
+   </div>
+   <div class="card"><h3>الشرائح المحفوظة محليًا <span class="st setup">تخزين المتصفح فقط</span></h3><div class="tw" id="segLocal"></div></div>
+   <div class="card"><h3>شرائح OneSignal <button class="btn sm" onclick="loadSegs()">تحميل</button></h3><div class="tw" id="segRemote"><p class="hint">اضغط تحميل (يتطلب الوسيط).</p></div></div>
+  </section>
+
+  <!-- Templates -->
+  <section class="tab" id="t-tpl">
+   <div class="card"><h3>القوالب المحلية <span class="st setup">محفوظة في هذا المتصفح فقط</span></h3>
+    <div class="grid g3"><div><label>بحث بالاسم</label><input id="tQ" oninput="drawTpl()"></div>
+     <div><label>التصنيف</label><select id="tC" onchange="drawTpl()"><option value="">الكل</option></select></div></div>
+    <div class="tw" id="tplList" style="margin-top:10px"></div>
+   </div>
+   <div class="card"><h3>إنشاء / تعديل قالب</h3>
+    <input type="hidden" id="tId">
+    <div class="grid g2"><div><label>الاسم *</label><input id="tN"></div><div><label>التصنيف</label><input id="tK" list="tcats" placeholder="ترحيب، محتوى جديد، تذكير…"><datalist id="tcats"><option>ترحيب</option><option>محتوى جديد</option><option>تذكير</option><option>إعادة تنشيط</option></datalist></div></div>
+    <label>العنوان *</label><input id="tT"><label>النص *</label><textarea id="tB"></textarea>
+    <div class="grid g2"><div><label>الرابط</label><input id="tU" dir="ltr"></div><div><label>الصورة</label><input id="tG" dir="ltr"></div></div>
+    <div class="row"><button class="btn" onclick="saveTpl()">حفظ القالب</button><button class="btn sec" onclick="clearTpl()">جديد</button></div>
+   </div>
+   <div class="card"><h3>قوالب OneSignal الرسمية <span class="st live">قراءة فقط عبر الوسيط</span> <button class="btn sm" onclick="loadOsTpl()">تحميل</button></h3>
+    <p class="hint">يوفر API عرض القوالب وقراءتها. إنشاء/حذف القوالب في OneSignal من لوحتهم (غير مُنفَّذ هنا لعدم التحقق منه).</p>
+    <div class="tw" id="osTpl"></div></div>
+  </section>
+
+  <!-- Campaigns -->
+  <section class="tab" id="t-camp">
+   <div class="card"><h3>الحملات <button class="btn sm" onclick="loadLive()">تحديث</button> <span class="st live">من View messages</span></h3>
+    <p class="hint">لا يعرض هذا API الرسائل المُرسلة من Journeys، ورسائل API تُحفظ 30 يومًا تقريبًا.</p>
+    <div class="row"><input id="cQ" placeholder="بحث…" oninput="drawCamp()" style="max-width:260px"><select id="cS" onchange="drawCamp()" style="max-width:180px"><option value="">كل الحالات</option><option>مجدولة</option><option>قيد التنفيذ</option><option>مكتملة</option><option>ملغاة</option></select></div>
+    <div class="tw" id="campTbl" style="margin-top:10px"><p class="hint">لم يتم التحميل بعد.</p></div></div>
+   <div class="card"><h3>المسودات المحلية <span class="st setup">هذا المتصفح فقط</span></h3><div class="tw" id="draftTbl"></div></div>
+   <div class="card"><h3>إرسالات فاشلة بانتظار إعادة المحاولة</h3><div class="tw" id="failTbl"></div>
+    <p class="hint">إعادة المحاولة تستخدم نفس <code>idempotency_key</code>، فلا يُرسل الإشعار مرتين إن كان الطلب الأول قد نجح فعلًا.</p></div>
+   <div class="card"><h3>رحلات المستخدم Journeys</h3>
+    <p class="hint">لا يوفر OneSignal API عامًا لإنشاء Journeys أو تعديلها أو إيقافها، لذلك لا تحاكي هذه اللوحة ذلك.</p>
+    <div class="tw"><table><thead><tr><th>الرحلة</th><th>الحالة هنا</th><th>كيف تُنفَّذ</th></tr></thead><tbody>
+     <tr><td>ترحيب بالجدد</td><td><span class="st no">غير مدعومة عبر API</span></td><td>أنشئها في Journeys بلوحة OneSignal (مشغّل: اشتراك جديد/وسم).</td></tr>
+     <tr><td>إعادة تنشيط غير النشطين</td><td><span class="st setup">بديل متاح</span></td><td>أرسل من المحرر بفلتر <code>last_session &gt; N</code> (تبويب الإشعارات) أو أنشئ Journey.</td></tr>
+     <tr><td>محتوى جديد</td><td><span class="st live">متاح كإرسال</span></td><td>أرسل من المحرر إلى شريحة/وسم.</td></tr>
+     <tr><td>تذكير مجدول</td><td><span class="st live">متاح كإرسال</span></td><td>جدولة مرة واحدة عبر <code>send_after</code>.</td></tr></tbody></table></div>
+    <h3 style="margin-top:14px">مخطِّط خطوات محلي <span class="st demo">للتخطيط فقط — لا يُنشئ شيئًا في OneSignal</span></h3>
+    <div class="row"><input id="jS" placeholder="خطوة (مثال: انتظر يومًا ← أرسل تذكيرًا إن لم يفتح)" style="flex:1"><button class="btn sec sm" onclick="addJ()">إضافة</button></div>
+    <ol id="jList" style="padding-inline-start:22px;margin-top:8px"></ol>
+   </div>
+  </section>
+
+  <!-- Smart -->
+  <section class="tab" id="t-smart">
+   <div class="card"><h3>خيارات تحسين وقت الإرسال</h3>
+    <p class="hint">هذه الخيارات تمرّ كما هي إلى OneSignal عبر الحقل <code>delayed_option</code>. هذا القسم لا يطبّق أي ذكاء اصطناعي محلي، والخدمة وحدها تقرر الوقت، وقد تُرفض بعض الخيارات حسب الخطة (وتُعرض رسالة الرفض كما هي).</p>
+    <label>الخيار المستخدم في الإرسال القادم</label>
+    <select id="smartSel" onchange="S.smart=this.value;pv();toast('تم تحديد الخيار للإرسال القادم')">
+     <option value="">بدون (إرسال وفق الجدولة العادية)</option>
+     <option value="last-active">Intelligent Delivery — آخر وقت نشاط للمستخدم</option>
+     <option value="timezone">حسب المنطقة الزمنية لكل مستخدم (مع وقت اليوم)</option>
+    </select>
+    <p class="hint" style="margin-top:8px">نتائج المقارنة: أرسل نسختين (مع وبدون الخيار) من تبويب A/B، ثم قارن معدل النقر من تبويب التحليلات. لا تُعرض أرقام قبل توفر بيانات فعلية.</p>
+   </div>
+  </section>
+
+  <!-- Analytics -->
+  <section class="tab" id="t-ana">
+   <div class="card"><h3>تقارير الأداء <span class="st live">من OneSignal عبر الوسيط</span></h3>
+    <div class="row" style="margin:0"><button class="btn sm" onclick="loadLive()">تحديث</button><button class="btn sec sm" onclick="exportCSV()">تصدير CSV</button>
+     <select id="aPer" style="width:auto" onchange="drawAna()"><option value="7">مقارنة 7 أيام</option><option value="14">مقارنة 14 يومًا</option><option value="30">مقارنة 30 يومًا</option></select></div>
+    <div id="cmpBox" class="grid g3" style="margin-top:12px"></div>
+    <div class="tw" id="anaTbl" style="margin-top:12px"><p class="hint">لا توجد بيانات محمّلة. اضغط تحديث (يتطلب الوسيط).</p></div>
+   </div>
+   <div class="card"><h3>أداء الشرائح</h3><div class="tw" id="segPerf"></div>
+    <p class="hint">يُجمَّع من الإشعارات المرسلة إلى كل شريحة. الرسائل المستهدفة بـ filters تُجمَّع تحت «filters».</p></div>
+   <div class="card"><h3>تفاصيل حملة</h3><pre id="detail">اختر حملة من الجدول.</pre></div>
+  </section>
+
+  <!-- A/B -->
+  <section class="tab" id="t-ab">
+   <div class="card"><h3>تجربة A/B <span class="st setup">تنفيذ خاص بالمشروع</span></h3>
+    <p class="hint">لا يوفر OneSignal API تجربة A/B جاهزة هنا، لذلك تُنفَّذ كالتالي: يضع الموقع (index.html) وسمًا رقميًا <code>ab_bucket</code> (0–99) عند الاشتراك، ثم ترسل اللوحة كل نسخة إلى نطاق مختلف من الأرقام. فلا يتلقى المستخدم أكثر من نسخة. يعمل ذلك فقط للمشتركين الذين اشتركوا بعد تفعيل هذا الوسم.</p>
+    <div id="abV"></div>
+    <div class="row"><button class="btn sec sm" onclick="addAB()">+ نسخة</button>
+     <select id="abM" style="width:auto"><option value="click">معيار النجاح: معدل النقر</option><option value="deliv">معدل التسليم</option></select>
+     <select id="abL" style="width:auto"><option value="">كل اللغات</option><option value="ar">العربية فقط</option></select></div>
+    <div class="row"><input id="abU" dir="ltr" placeholder="رابط الوجهة (اختياري، https)" style="flex:1"><button class="btn" onclick="runAB()">إطلاق التجربة</button></div>
+   </div>
+   <div class="card"><h3>نتائج التجارب (من هذا المتصفح)</h3><div id="abRes"><p class="hint">لا توجد تجارب.</p></div></div>
+  </section>
+
+  <!-- Subscribers -->
+  <section class="tab" id="t-subs">
+   <div class="card"><h3>المشتركون والمستخدمون</h3>
+    <p class="hint">لا يوفر REST API قائمة كاملة بكل المستخدمين للتصفح. المتاح هنا: البحث عن مستخدم بـ External ID، وعرض بياناته وتحديثها وحذفه، وعدّاد المشتركين من بيانات التطبيق. للتصدير الكامل استخدم تصدير CSV من لوحة OneSignal. <span class="st no">عرض القائمة الكاملة غير مدعوم</span></p>
+    <div class="row"><input id="uQ" dir="ltr" placeholder="External ID" style="max-width:300px"><button class="btn" onclick="findUser()">بحث</button></div>
+    <div id="uBox" style="margin-top:12px"></div>
+   </div>
+   <div class="card"><h3>عدّاد التطبيق</h3><div id="appInfo"><p class="hint">اضغط لتحميل.</p></div><button class="btn sec sm" onclick="loadApp()">تحميل</button></div>
+  </section>
+
+  <!-- Logs -->
+  <section class="tab" id="t-log">
+   <div class="card"><h3>سجل العمليات</h3>
+    <div class="row" style="margin:0"><input id="lQ" placeholder="بحث…" oninput="drawLog()" style="max-width:240px"><select id="lR" onchange="drawLog()" style="width:auto"><option value="">كل النتائج</option><option>نجاح</option><option>فشل</option></select>
+    <button class="btn sec sm" onclick="loadSrvLog()">تحميل سجل الخادم</button><button class="btn sec sm" onclick="clearLog()">مسح المحلي</button></div>
+    <p class="hint" style="margin:8px 0"><span class="st no">غير موثوق</span> السجل أدناه محفوظ في هذا المتصفح ويمكن تعديله، وهو ليس سجلًا أمنيًا. السجل الموثوق هو سجل الخادم (<code>GET /audit</code>) عند توفر الوسيط.</p>
+    <div class="tw" id="logTbl"></div>
+    <h3 style="margin-top:14px">سجل الخادم</h3><div class="tw" id="srvLog"><p class="hint">لم يُحمَّل.</p></div>
+   </div>
+  </section>
+
+  <!-- Settings -->
+  <section class="tab" id="t-set">
+   <div class="card"><h3>إعدادات الاتصال</h3>
+    <div class="grid g2"><div><label>OneSignal App ID (قيمة عامة)</label><input id="cfA" dir="ltr"></div>
+     <div><label>عنوان الوسيط الآمن (Backend / Serverless)</label><input id="cfP" dir="ltr" placeholder="https://your-worker.example.workers.dev"></div>
+     <div><label>Supabase: عنوان المشروع</label><input id="cfSU" dir="ltr" placeholder="https://xxxx.supabase.co"></div>
+     <div><label>Supabase: مفتاح anon/publishable</label><input id="cfSK" dir="ltr"></div>
+     <div><label>اسم الـ Edge Function</label><input id="cfSF" dir="ltr" placeholder="osl-admin"></div>
+     <div><label>البيئة</label><select id="cfE"><option value="test">تجريبية</option><option value="prod">إنتاج</option></select></div></div>
+    <div class="row"><button class="btn" onclick="saveCfg()">حفظ</button><button class="btn sec" onclick="testConn()">اختبار الاتصال</button></div>
+    <p class="hint" style="margin-top:8px">حالة الاتصال: <span id="cfSt">لم تُفحص</span> · آخر تحقق: <span id="cfT">—</span></p>
+    <p class="hint">لا تُحفظ المفاتيح في هذه الإعدادات إطلاقًا. للتشغيل الفوري استخدم «الوضع المباشر المؤقت» أدناه (ذاكرة فقط)، وللتشغيل الآمن الدائم استخدم Supabase.</p>
+   </div>
+   <div class="card"><h3>الوضع المباشر المؤقت <span class="st setup">للتشغيل الفوري — الأمان لاحقًا</span> <span id="dkSt"></span></h3>
+    <p class="hint">يعمل بدون Supabase: الصق المفاتيح هنا فتبقى <b>في ذاكرة هذه الصفحة فقط</b> (لا تُحفظ في الملفات ولا في المتصفح، وتزول عند إغلاق التبويب أو الخروج)، ويتصل المتصفح بـ OneSignal وGitHub مباشرة. لهذا الوضع حدود:</p>
+    <ul class="hint" style="padding-inline-start:20px;line-height:1.9"><li>قد يمنع OneSignal الطلبات المباشرة من المتصفح (CORS)؛ عندها تظهر رسالة واضحة ولا يُعلن أي نجاح، والحل النهائي هو دالة Supabase.</li><li>المفتاح يظهر لأي أداة مطوّر على جهازك، فاستخدمه من جهاز موثوق فقط، ولا تُبقِ التبويب مفتوحًا.</li><li>سجل الخادم (/audit) غير متاح في هذا الوضع.</li></ul>
+    <div class="grid g2"><div><label>OneSignal REST API Key (Key)</label><input id="dkO" type="password" dir="ltr" autocomplete="off" placeholder="os_v2_app_…"></div>
+     <div><label>GitHub fine-grained token (Contents: Read & Write لهذا المستودع فقط)</label><input id="dkG" type="password" dir="ltr" autocomplete="off" placeholder="github_pat_…"></div></div>
+    <div class="row"><button class="btn" onclick="enableDirect()">تفعيل لهذه الجلسة</button><button class="btn sec" onclick="disableDirect()">إيقاف ومسح المفاتيح</button></div>
+  </div>
+  <div class="card"><h3>الوسيط: Supabase Edge Function (موصى به)</h3>
+    <p class="hint">عند ملء عنوان Supabase يتحول الدخول إلى Supabase Auth (بريد + كلمة مرور)، وتُرسل كل الطلبات إلى <code>/functions/v1/osl-admin</code> بـ <code>Authorization: Bearer &lt;access_token&gt;</code>. الدالة تتحقق من الـ JWT وتطابق البريد مع <code>ADMIN_EMAILS</code>، ثم تستخدم الأسرار من <code>supabase secrets</code>. الـ token يُحفظ في sessionStorage فقط (يزول بإغلاق التبويب). نفس مسارات العقد أدناه تنطبق، لكن بلا <code>/auth/login</code> و<code>/auth/logout</code>.</p>
+    <h3>العقد العام (Contract)</h3>
+    <p class="hint">كل الطلبات تُرسل بـ <code>credentials: include</code> وبيانات JSON. يجب أن يتحقق الوسيط من جلسة المسؤول (كوكي HttpOnly + Secure + SameSite) قبل كل عملية، وأن يضبط CORS لأصل هذه الصفحة فقط، ويضيف ترويسة <code>Authorization: Key …</code> من متغير بيئة.</p>
+    <pre>POST /auth/login          {username,password} → Set-Cookie (HttpOnly; Secure; SameSite=Strict)
+GET  /auth/session        → {user}
+POST /auth/logout
+GET  /health              → {ok:true}
+ANY  /onesignal/*         → https://api.onesignal.com/* (قائمة بيضاء من المسارات)
+     POST   /onesignal/notifications
+     GET    /onesignal/notifications?app_id=&amp;limit=50
+     GET    /onesignal/notifications/{id}?app_id=
+     DELETE /onesignal/notifications/{id}?app_id=
+     GET    /onesignal/apps/{app_id}
+     GET    /onesignal/templates?app_id=
+     GET|POST|DELETE /onesignal/apps/{app_id}/segments
+     GET|PATCH|DELETE /onesignal/apps/{app_id}/users/by/external_id/{id}
+GET  /audit               → [{time,user,op,campaign,result,code}]
+GET  /github/file?repo=&amp;branch=&amp;path=      → {sha,content(UTF-8),commit:{sha,message,date}}
+PUT  /github/file         {repo,branch,path,content,sha,message} → {commit:{sha,url}}
+GET  /github/commits?repo=&amp;branch=&amp;path=   → [{sha,message,date}]</pre>
+    <p class="hint">أخطاء 401/403/404/429/5xx تُعرض للمسؤول برسالة مفهومة. مهلة الطلب 15 ثانية.</p>
+   </div>
+   <div class="card"><h3>إعداد OneSignal وHTTPS</h3>
+    <ol class="hint" style="padding-inline-start:20px;line-height:2"><li>أنشئ تطبيق Web Push بعنوان موقعك الفعلي (HTTPS).</li><li>ضع App ID في index.html (المتغير <code>APP_ID</code>) وفي الإعدادات أعلاه.</li><li>ارفع <code>OneSignalSDKWorker.js</code> إلى جذر الموقع (سطر <code>importScripts</code> الرسمي) — ملف مطلوب من المتصفح خارج الملفين.</li><li>أنشئ REST API Key من إعدادات التطبيق وضعه كمتغير بيئة في الوسيط فقط.</li></ol></div>
+  </section>
+
+  <!-- GitHub -->
+  <section class="tab" id="t-gh">
+   <div class="card"><h3>إدارة النشر عبر GitHub <span id="ghSt"></span></h3>
+    <p class="hint">لا يُخزَّن أي توكن هنا. الوسيط يحمل التوكن (بأقل صلاحيات ممكنة على هذا المستودع فقط). كل حفظ يمر بمعاينة وتأكيد، ولا يُعلن النجاح إلا باستجابة ناجحة تحتوي على Commit.</p>
+    <div class="grid g3"><div><label>المستودع (owner/name)</label><input id="gR" dir="ltr"></div><div><label>الفرع</label><input id="gBr" dir="ltr" value="main"></div>
+     <div><label>&nbsp;</label><button class="btn sec" onclick="saveGh()">حفظ الإعدادات</button></div>
+     <div><label>مسار index.html</label><input id="gP1" dir="ltr" value="index.html"></div><div><label>مسار admin.html</label><input id="gP2" dir="ltr" value="admin.html"></div></div>
+    <div class="row"><button class="btn sec" onclick="ghLoad('gP1')">تحميل index.html</button><button class="btn sec" onclick="ghLoad('gP2')">تحميل admin.html</button></div>
+   </div>
+   <div class="card" id="ghEd" style="display:none"><h3>تحرير: <code id="ghPath"></code></h3>
+    <p class="hint" id="ghMeta"></p>
+    <textarea id="ghTxt" dir="ltr" style="min-height:320px;font-family:ui-monospace,monospace;font-size:.8rem"></textarea>
+    <label>رسالة الـ Commit</label><input id="ghMsg" value="تحديث من لوحة Notification Lab">
+    <div class="row"><button class="btn" onclick="ghSave()">معاينة وحفظ</button><button class="btn sec" onclick="ghReload()">إعادة التحميل من GitHub</button></div>
+    <div class="hint" id="ghRes" style="margin-top:8px"></div>
+   </div>
+   <div class="card"><h3>سجل النشر (هذا المتصفح)</h3><div class="tw" id="ghHist"></div></div>
+  </section>
+
+  </div>
+ </div>
+</div>
+
+<div class="mod" id="cm"><div class="box"><h3 id="cmT"></h3><div id="cmB" style="margin:10px 0"></div><div class="row"><button class="btn" id="cmY">تأكيد</button><button class="btn sec" id="cmN">إلغاء</button></div></div></div>
+
+<script>
+'use strict';
+/* ================= أدوات عامة ================= */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const jget=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const jset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const ST={live:['live','متصل فعليًا'],setup:['setup','يحتاج إعدادًا'],no:['no','غير مدعوم'],demo:['demo','بيانات تجريبية']};
+const stb=k=>`<span class="st ${ST[k][0]}">${ST[k][1]}</span>`;
+let pend=0;const prog=d=>{pend+=d;$('prog').classList.toggle('on',pend>0)};
+function toast(m,k){const t=document.createElement('div');t.className='toast '+(k||'');t.textContent=m;$('toasts').appendChild(t);setTimeout(()=>t.remove(),5000)}
+function confirmDlg(title,html){return new Promise(res=>{$('cmT').textContent=title;$('cmB').innerHTML=html;$('cm').classList.add('on');
+ const done=v=>{$('cm').classList.remove('on');res(v)};$('cmY').onclick=()=>done(true);$('cmN').onclick=()=>done(false)})}
+const S={proxy:'',sbUrl:'',sbKey:'',sbFn:'osl-admin',appId:'b68d3064-f5c0-446f-b0e3-9733b0d291ee',env:'test',smart:'',gh:{repo:'',branch:'main',p1:'index.html',p2:'admin.html'}};
+Object.assign(S,jget('osl_cfg',{}));
+const uuidRe=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uid=()=>crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c=='x'?r:(r&3|8)).toString(16)});
+const httpsOk=u=>{try{const x=new URL(u);return x.protocol==='https:'}catch(e){return false}};
+const toMs=v=>{if(v==null||v==='')return 0;if(typeof v==='number')return v<1e12?v*1000:v;const p=Date.parse(v);return isNaN(p)?0:p};
+const fmt=ms=>ms?new Date(ms).toLocaleString('ar-EG'):'—';
+const nz=v=>Number.isFinite(+v)?+v:0;
+
+/* ================= API عبر الوسيط ================= */
+const mkErr=(code,message,body)=>Object.assign(new Error(message),{code,body});
+function msgFor(s,j){const extra=j&&(j.errors?(Array.isArray(j.errors)?j.errors.map(e=>typeof e==='string'?e:JSON.stringify(e)).join('، '):JSON.stringify(j.errors)):j.error||j.message)||'';
+ const m={400:'طلب غير صالح',401:'انتهت الجلسة أو المصادقة غير صحيحة',403:'لا تملك صلاحية لهذه العملية',404:'المورد غير موجود',409:'تعارض في البيانات',422:'بيانات مرفوضة',429:'تجاوزت حد المعدل، انتظر قليلًا'}[s]||(s>=500?'خطأ في الخدمة/الوسيط، حاول لاحقًا':'خطأ '+s);
+ return m+(extra?' — '+extra:'')}
+/* ---- Supabase Auth ---- */
+function keyKind(k){if(/^sb_publishable_[\w-]+$/.test(k))return 'ok';if(/^sb_secret_/.test(k))return 'secret';const m=String(k).split('.');
+ if(m.length===3){try{const p=JSON.parse(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')));return p.role==='anon'?'ok':(p.role==='service_role'?'secret':'bad')}catch(e){}}return 'bad'}
+const sbOk=u=>/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(u);
+const sbBase=()=>S.sbUrl?S.sbUrl.replace(/\/$/,'')+'/functions/v1/'+(S.sbFn||'osl-admin'):'';
+let TOK=null;try{TOK=JSON.parse(sessionStorage.getItem('osl_tok')||'null')}catch(e){}
+function setTok(j){TOK={a:j.access_token,r:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000};try{sessionStorage.setItem('osl_tok',JSON.stringify(TOK))}catch(e){}}
+function clrTok(){TOK=null;try{sessionStorage.removeItem('osl_tok')}catch(e){}}
+async function sbAuth(grant,body){let r;
+ try{r=await fetch(S.sbUrl.replace(/\/$/,'')+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{apikey:S.sbKey,'Content-Type':'application/json'},body:JSON.stringify(body)})}
+ catch(e){throw mkErr('NETWORK','تعذر الوصول إلى Supabase (تحقق من عنوان المشروع).')}
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok){const c=j.error_code||j.error||'';throw mkErr('AUTH_'+r.status,/invalid_credentials|invalid_grant/.test(c)||r.status===400?'البريد أو كلمة المرور غير صحيحة.':r.status===429?'محاولات كثيرة، انتظر قليلًا.':(j.msg||j.error_description||'تعذر تسجيل الدخول ('+r.status+')'))}
+ if(!j.access_token)throw mkErr('AUTH_BAD','استجابة غير متوقعة من Supabase.');return j}
+async function freshTok(){if(!TOK)throw mkErr('NO_SESSION','لا توجد جلسة. سجّل الدخول.');
+ if(TOK.exp-Date.now()<60000){try{setTok(await sbAuth('refresh_token',{refresh_token:TOK.r}))}catch(e){clrTok();setTimeout(logout,0);throw mkErr('HTTP_401','انتهت الجلسة، سجّل الدخول من جديد.')}}
+ return TOK.a}
+/* ---- الوضع المباشر المؤقت: المفاتيح في الذاكرة فقط ---- */
+const DK={os:'',gh:''};
+const directOn=()=>!S.sbUrl&&!S.proxy&&!!(DK.os||DK.gh);
+async function direct(method,path,body){
+ const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),15000);prog(1);
+ const call=async(url,init)=>{let r;
+  try{r=await fetch(url,{...init,signal:ctl.signal})}
+  catch(e){if(e.name==='AbortError')throw mkErr('TIMEOUT','انتهت مهلة الطلب (15 ثانية).');
+   throw mkErr('NETWORK','تعذر إتمام الطلب: غالبًا يمنع المتصفح الاتصال المباشر (CORS) أو لا توجد شبكة. لم يُرسل شيء. استخدم دالة Supabase لهذه العملية.')}
+  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}
+  if(!r.ok)throw mkErr('HTTP_'+r.status,msgFor(r.status,j),j);return j};
+ try{
+  if(path==='/health')return{ok:true,direct:true};
+  if(path.startsWith('/onesignal/')){
+   if(!DK.os)throw mkErr('NO_KEY','أدخل مفتاح OneSignal في الإعدادات ← الوضع المباشر المؤقت.');
+   return await call('https://api.onesignal.com'+path.slice('/onesignal'.length),{method,headers:{Authorization:'Key '+DK.os,'Content-Type':'application/json',Accept:'application/json'},body:body!==undefined?JSON.stringify(body):undefined})}
+  if(path.startsWith('/github/')){
+   if(!DK.gh)throw mkErr('NO_KEY','أدخل توكن GitHub في الإعدادات ← الوضع المباشر المؤقت.');
+   const u=new URL('http://x'+path),q=k=>u.searchParams.get(k);
+   const safeP=x=>/^[\w\-]+(\/[\w\-]+)*\.(html|js|css|json)$/.test(x||'')&&!/^\.|\/\./.test(x);
+   const okPaths=[S.gh.p1,S.gh.p2,'OneSignalSDKWorker.js'].filter(safeP);
+   const chk=(repo,br,p)=>{if(!repo||repo!==S.gh.repo||!/^[\w.\-]+\/[\w.\-]+$/.test(repo))throw mkErr('V','المستودع غير مطابق للإعدادات.');
+    if(!/^[\w.\-/]{1,100}$/.test(br||''))throw mkErr('V','اسم فرع غير صالح.');if(!okPaths.includes(p)||/\.\./.test(p))throw mkErr('V','المسار غير مسموح.')};
+   const gh=(p,init={})=>call('https://api.github.com/repos/'+S.gh.repo+p,{...init,headers:{Authorization:'Bearer '+DK.gh,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(init.body?{'Content-Type':'application/json'}:{})}});
+   if(u.pathname==='/github/file'&&method==='GET'){const repo=q('repo'),br=q('branch'),p=q('path');chk(repo,br,p);
+    const f=await gh('/contents/'+encodeURI(p)+'?ref='+encodeURIComponent(br));
+    if(!f||f.encoding!=='base64'||typeof f.content!=='string')throw mkErr('BAD','الملف كبير أو ليس نصًا.');
+    const content=new TextDecoder().decode(Uint8Array.from(atob(f.content.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+    let commit=null;try{const c=(await gh('/commits?sha='+encodeURIComponent(br)+'&path='+encodeURIComponent(p)+'&per_page=1'))[0];if(c)commit={sha:c.sha,message:c.commit.message,date:c.commit.committer&&c.commit.committer.date}}catch(e){}
+    return{sha:f.sha,content,commit}}
+   if(u.pathname==='/github/file'&&method==='PUT'){const b=body||{};chk(b.repo,b.branch,b.path);
+    if(!b.message||!String(b.message).trim()||b.message.length>200)throw mkErr('V','رسالة Commit غير صالحة.');
+    const bytes=new TextEncoder().encode(b.content);if(bytes.length>1.5*1024*1024)throw mkErr('V','الملف كبير جدًا.');
+    let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode(...bytes.subarray(i,i+8192));
+    const j=await gh('/contents/'+encodeURI(b.path),{method:'PUT',body:JSON.stringify({message:b.message,content:btoa(bin),sha:b.sha,branch:b.branch})});
+    return{commit:{sha:j.commit.sha,url:j.commit.html_url},content_sha:j.content&&j.content.sha}}
+   throw mkErr('DIRECT_UNSUPPORTED','هذه العملية غير متاحة في الوضع المباشر.')}
+  throw mkErr('DIRECT_UNSUPPORTED','هذه العملية تتطلب وسيطًا (Supabase) ولا تعمل في الوضع المباشر.')
+ }finally{clearTimeout(to);prog(-1)}}
+function drawDk(){const on=directOn();$('dkSt').innerHTML=on?`<span class="st live">مفعّل: ${DK.os?'OneSignal':''}${DK.os&&DK.gh?' + ':''}${DK.gh?'GitHub':''}</span>`:'<span class="st no">غير مفعّل</span>';updConn()}
+function enableDirect(){const o=$('dkO').value.trim(),g=$('dkG').value.trim();
+ if(S.sbUrl||S.proxy)return toast('هناك وسيط مضبوط. امسح عنوانه من الإعدادات أولًا لاستخدام الوضع المباشر.','bad');
+ if(!o&&!g)return toast('أدخل مفتاحًا واحدًا على الأقل','bad');
+ if(o&&!/^[\w\-]{20,}$/.test(o))return toast('مفتاح OneSignal غير صالح الشكل','bad');
+ if(g&&!/^(github_pat_|ghp_)[\w]{20,}$/.test(g))return toast('توكن GitHub غير صالح الشكل (github_pat_… أو ghp_…)','bad');
+ if(o)DK.os=o;if(g)DK.gh=g;$('dkO').value='';$('dkG').value='';S.connOk=null;drawDk();
+ toast('فُعّل الوضع المباشر لهذه الجلسة. المفاتيح في الذاكرة فقط. اضغط «اختبار الاتصال».','ok');log('تفعيل الوضع المباشر','','نجاح')}
+function disableDirect(){DK.os='';DK.gh='';S.connOk=null;drawDk();toast('مُسحت المفاتيح من الذاكرة','ok')}
+async function api(method,path,body){
+ if(directOn())return direct(method,path,body);
+ const sb=!!S.sbUrl;
+ const base=sb?sbBase():(S.proxy||'').replace(/\/$/,'');
+ if(!base)throw mkErr('NO_PROXY','لم يُضبط الوسيط الآمن (Supabase أو عنوان وسيط) في الإعدادات. لا يمكن تنفيذ عمليات حقيقية.');
+ if(!httpsOk(base)&&!/^http:\/\/(localhost|127\.0\.0\.1)/.test(base))throw mkErr('BAD_PROXY','عنوان الوسيط يجب أن يكون HTTPS.');
+ const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),15000);prog(1);
+ try{const h={'Content-Type':'application/json',Accept:'application/json'};
+  if(sb){h.Authorization='Bearer '+await freshTok();h.apikey=S.sbKey}
+  const r=await fetch(base+path,{method,credentials:sb?'omit':'include',signal:ctl.signal,headers:h,body:body!==undefined?JSON.stringify(body):undefined});
+  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}
+  if(!r.ok){if(r.status===401&&S.serverAuth){setTimeout(logout,0)}throw mkErr('HTTP_'+r.status,msgFor(r.status,j),j)}
+  return j}
+ catch(e){if(e.name==='AbortError')throw mkErr('TIMEOUT','انتهت مهلة الطلب (15 ثانية).');if(e.code)throw e;throw mkErr('NETWORK','تعذر الوصول إلى الوسيط (شبكة أو CORS أو عنوان/اسم دالة خاطئ، أو الدالة غير منشورة).')}
+ finally{clearTimeout(to);prog(-1)}}
+const os=(m,p,b)=>api(m,'/onesignal'+p,b);
+const needApp=()=>{if(!uuidRe.test(S.appId))throw mkErr('NO_APP','أدخل OneSignal App ID صالحًا في الإعدادات.')};
+
+/* ================= السجل المحلي (غير موثوق) ================= */
+let LOG=jget('osl_log',[]);
+function log(op,camp,res,code,note){LOG.unshift({t:Date.now(),user:S.user||'—',op,camp:camp||'',res,code:code||'',note:note||''});LOG=LOG.slice(0,200);jset('osl_log',LOG);if($('t-log').classList.contains('on'))drawLog();drawDashLog()}
+function logTbl(rows){return `<table><thead><tr><th>الوقت</th><th>المسؤول</th><th>العملية</th><th>الحملة</th><th>النتيجة</th><th>رمز الخطأ</th><th>ملاحظة</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmt(r.t)}</td><td>${esc(r.user)}</td><td>${esc(r.op)}</td><td><code>${esc(r.camp)}</code></td><td>${r.res==='نجاح'?'✓ نجاح':'✗ فشل'}</td><td>${esc(r.code)}</td><td>${esc(r.note)}</td></tr>`).join('')||'<tr><td colspan=7 class="hint">لا توجد عمليات.</td></tr>'}</tbody></table>`}
+function drawLog(){const q=$('lQ').value.trim().toLowerCase(),r=$('lR').value;
+ $('logTbl').innerHTML=logTbl(LOG.filter(x=>(!r||x.res===r)&&(!q||JSON.stringify(x).toLowerCase().includes(q))))}
+function drawDashLog(){$('dashLog').innerHTML=logTbl(LOG.slice(0,6))}
+function clearLog(){LOG=[];jset('osl_log',LOG);drawLog();drawDashLog()}
+async function loadSrvLog(){try{const r=await api('GET','/audit');const a=Array.isArray(r)?r:(r&&r.items)||[];
+ $('srvLog').innerHTML=`<table><thead><tr><th>الوقت</th><th>المسؤول</th><th>العملية</th><th>الحملة</th><th>النتيجة</th><th>الرمز</th></tr></thead><tbody>${a.map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.user)}</td><td>${esc(x.op)}</td><td>${esc(x.campaign)}</td><td>${esc(x.result)}</td><td>${esc(x.code)}</td></tr>`).join('')||'<tr><td colspan=6 class="hint">فارغ</td></tr>'}</tbody></table>`}
+ catch(e){$('srvLog').innerHTML=`<p class="hint" style="color:var(--err)">${esc(e.message)}</p>`}}
+
+/* ================= SHA-256 (للقفل التجريبي فقط) ================= */
+function sha256(str){const enc=new TextEncoder().encode(str);
+ if(window.crypto&&crypto.subtle)return crypto.subtle.digest('SHA-256',enc).then(b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''));
+ const K=[];for(let i=2,n=0;n<64;i++){let p=1;for(let j=2;j*j<=i;j++)if(i%j==0){p=0;break}if(p){K[n++]=(Math.cbrt(i)%1)*4294967296|0}}
+ let H=[];for(let i=2,n=0;n<8;i++){let p=1;for(let j=2;j*j<=i;j++)if(i%j==0){p=0;break}if(p){H[n++]=(Math.sqrt(i)%1)*4294967296|0}}
+ const l=enc.length,w=[],bl=l*8;const m=new Uint8Array(((l+9+63)>>6)<<6);m.set(enc);m[l]=128;
+ new DataView(m.buffer).setUint32(m.length-4,bl>>>0);new DataView(m.buffer).setUint32(m.length-8,Math.floor(bl/4294967296));
+ const dv=new DataView(m.buffer),R=(x,n)=>(x>>>n)|(x<<(32-n));
+ for(let o=0;o<m.length;o+=64){for(let i=0;i<16;i++)w[i]=dv.getUint32(o+i*4);
+  for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2];w[i]=(w[i-16]+(R(a,7)^R(a,18)^(a>>>3))+w[i-7]+(R(b,17)^R(b,19)^(b>>>10)))|0}
+  let[a,b,c,d,e,f,g,h]=H;
+  for(let i=0;i<64;i++){const t1=(h+(R(e,6)^R(e,11)^R(e,25))+((e&f)^(~e&g))+K[i]+w[i])|0,t2=((R(a,2)^R(a,13)^R(a,22))+((a&b)^(a&c)^(b&c)))|0;h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0}
+  H=[H[0]+a|0,H[1]+b|0,H[2]+c|0,H[3]+d|0,H[4]+e|0,H[5]+f|0,H[6]+g|0,H[7]+h|0]}
+ return Promise.resolve(H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join(''))}
+/* بصمة بيانات الدخول التجريبية (قفل واجهة فقط — ليست حماية حقيقية) */
+const DEMO_HASH='6352c0c904f5f0882ebf92c73f7bfe258f49d8ac16ed370bb48a1891ae556034';
+const SESS_MS=30*60*1000;let idleT=null,fails=0,lockUntil=0;
+function startSession(user){S.user=user;sessionStorage.setItem('osl_sess',JSON.stringify({u:user,exp:Date.now()+SESS_MS,srv:!!S.serverAuth}));$('login').style.display='none';$('app').classList.add('on');$('who').textContent='👤 '+user;boot();bump()}
+function bump(){clearTimeout(idleT);idleT=setTimeout(()=>{toast('انتهت الجلسة لعدم النشاط','bad');logout()},SESS_MS);try{const s=JSON.parse(sessionStorage.getItem('osl_sess')||'null');if(s){s.exp=Date.now()+SESS_MS;sessionStorage.setItem('osl_sess',JSON.stringify(s))}}catch(e){}}
+['click','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if($('app').classList.contains('on'))bump()}));
+async function logout(){if(S.serverAuth&&S.proxy&&!S.sbUrl){try{await api('POST','/auth/logout')}catch(e){}}
+ if(S.sbUrl&&TOK){try{fetch(S.sbUrl.replace(/\/$/,'')+'/auth/v1/logout',{method:'POST',headers:{apikey:S.sbKey,Authorization:'Bearer '+TOK.a}})}catch(e){}}
+ clrTok();sessionStorage.removeItem('osl_sess');location.reload()}
+$('lf').onsubmit=async ev=>{ev.preventDefault();const u=$('lu').value.trim(),p=$('lp').value,le=$('le');le.textContent='';
+ if(Date.now()<lockUntil){le.textContent='محاولات كثيرة، انتظر '+Math.ceil((lockUntil-Date.now())/1000)+' ثانية.';return}
+ $('lb').disabled=true;
+ try{
+  if(!S.sbUrl&&$('lsu').value.trim()){ // ربط Supabase لأول مرة من شاشة الدخول
+   const su=$('lsu').value.trim().replace(/\/$/,''),sk=$('lsk').value.trim();
+   if(!sbOk(su))throw mkErr('V','عنوان Supabase يجب أن يكون https://…');
+   const kk=keyKind(sk);if(kk==='secret')throw mkErr('V','مرفوض: هذا مفتاح سري (service_role / sb_secret). استخدم مفتاح anon أو publishable فقط، وغيّر المفتاح المكشوف من لوحة Supabase.');
+   if(kk!=='ok')throw mkErr('V','مفتاح anon/publishable غير صالح.');
+   S.sbUrl=su;S.sbKey=sk;persist()}
+  if(S.sbUrl){ // Supabase Auth ثم تحقق المسؤول على الدالة
+   setTok(await sbAuth('password',{email:u,password:p}));
+   try{const r=await api('GET','/auth/session');S.serverAuth=true;startSession(r.user||u);return}
+   catch(e){clrTok();throw e.code==='HTTP_403'?mkErr('NA','تم تسجيل الدخول لكن هذا البريد ليس ضمن ADMIN_EMAILS في الدالة.'):e}}
+  if(S.proxy){ // تحقق حقيقي على الخادم
+   try{await api('POST','/auth/login',{username:u,password:p});S.serverAuth=true;startSession(u);return}
+   catch(e){if(e.code==='NETWORK'||e.code==='TIMEOUT'||e.code==='BAD_PROXY'){le.textContent='تعذر الوصول إلى الوسيط ('+e.message+'). يمكنك مسح عنوان الوسيط من الإعدادات للدخول بالقفل التجريبي.';return}
+    throw e}
+  }
+  const h=await sha256('osl-demo-lock:'+u+':'+p);
+  if(h===DEMO_HASH){S.serverAuth=false;startSession(u);return}
+  throw mkErr('BAD','اسم المستخدم أو كلمة المرور غير صحيحة.');
+ }catch(e){if(e.code!=='V'){fails++;if(fails>=5){lockUntil=Date.now()+30000;fails=0}}le.textContent=e.message}
+ finally{$('lb').disabled=false}};
+(function init(){const s=jget('osl_cfg',{});
+ if(s.sbUrl){$('lmode').innerHTML='🔒 الدخول عبر Supabase Auth (بريد وكلمة مرور). التحقق من المسؤول يتم على الدالة في الخادم.';$('sbBox').style.display='none'}
+ else if(s.proxy)$('lmode').innerHTML='🔒 سيتم التحقق من بيانات الدخول على الخادم عبر الوسيط المضبوط. إن لم يتوفر الوسيط فلن يُسمح بالدخول التجريبي حتى تمسح عنوانه.';
+ try{const ss=JSON.parse(sessionStorage.getItem('osl_sess')||'null');if(ss&&ss.exp>Date.now()){S.serverAuth=!!ss.srv;
+  if(ss.srv&&(S.proxy||S.sbUrl)){api('GET','/auth/session').then(()=>startSession(ss.u)).catch(()=>sessionStorage.removeItem('osl_sess'))}
+  else if(!ss.srv)startSession(ss.u)}}catch(e){}})();
+
+/* ================= التنقل ================= */
+const TABS=[['notif','🔔','الإشعارات'],['dash','📊','لوحة المعلومات'],['camp','📣','الحملات والرحلات'],['seg','🎯','الشرائح'],['tpl','🧩','القوالب'],['smart','⏱','التوصيل الذكي'],['ana','📈','التحليلات'],['ab','🧪','اختبار A/B'],['subs','👥','المشتركون'],['log','🗂','سجل العمليات'],['gh','🚀','النشر (GitHub)'],['set','⚙️','إعدادات التكامل']];
+function go(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='t-'+id));
+ document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.t===id));
+ $('ttl').textContent=TABS.find(t=>t[0]===id)[2];$('app').classList.remove('mob');
+ if(id==='dash')drawDash();if(id==='log')drawLog();if(id==='tpl')drawTpl();if(id==='seg')drawSegLocal();if(id==='camp')drawCamp();if(id==='ana')drawAna();if(id==='ab')drawAB();if(id==='gh')drawGh();if(id==='set')drawCfg();
+ try{location.hash=id}catch(e){}}
+function toggleSide(){if(innerWidth<=900)$('app').classList.toggle('mob');else $('app').classList.toggle('collapsed')}
+function toggleTheme(){const r=document.documentElement;const n=r.dataset.theme==='light'?'dark':'light';r.dataset.theme=n;try{localStorage.setItem('osl_theme',n)}catch(e){}}
+try{const t=localStorage.getItem('osl_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
+let booted=false;
+function boot(){if(booted)return;booted=true;
+ $('nav').innerHTML=TABS.map(t=>`<a data-t="${t[0]}" onclick="go('${t[0]}')"><span>${t[1]}</span><span class="lbl">${t[2]}</span></a>`).join('');
+ tgUI();smUI();pv();drawSR();drawJ();drawDashLog();addAB();addAB();updConn();
+ const h=(location.hash||'').slice(1);go(TABS.some(t=>t[0]===h)?h:'notif')}
+function updConn(){$('connBadge').innerHTML=(S.proxy||S.sbUrl)?(S.connOk===true?stb('live'):S.connOk===false?stb('no'):'<span class="st setup">الوسيط لم يُفحص</span>'):directOn()?'<span class="st setup">وضع مباشر مؤقت</span>':'<span class="st setup">لا وسيط — وضع عرض</span>'}
+
+/* ================= الإعدادات ================= */
+function drawCfg(){drawDk();$('cfA').value=S.appId||'';$('cfP').value=S.proxy||'';$('cfSU').value=S.sbUrl||'';$('cfSK').value=S.sbKey||'';$('cfSF').value=S.sbFn||'osl-admin';$('cfE').value=S.env||'test';$('cfT').textContent=S.lastCheck?fmt(S.lastCheck):'—';
+ $('cfSt').innerHTML=S.connOk===true?stb('live'):S.connOk===false?stb('no'):'لم تُفحص'}
+function saveCfg(){const a=$('cfA').value.trim(),p=$('cfP').value.trim().replace(/\/$/,'');
+ if(a&&!uuidRe.test(a))return toast('App ID غير صالح (UUID).','bad');
+ if(p&&!httpsOk(p)&&!/^http:\/\/(localhost|127\.0\.0\.1)/.test(p))return toast('عنوان الوسيط يجب أن يكون HTTPS.','bad');
+ const su=$('cfSU').value.trim().replace(/\/$/,''),sk=$('cfSK').value.trim(),sf=$('cfSF').value.trim()||'osl-admin';
+ if(su){if(!sbOk(su))return toast('عنوان Supabase يجب أن يكون https://…','bad');const kk=keyKind(sk);
+  if(kk==='secret')return toast('مرفوض: مفتاح سري. استخدم anon/publishable فقط.','bad');if(kk!=='ok')return toast('مفتاح anon/publishable غير صالح','bad');
+  if(!/^[\w-]{1,60}$/.test(sf))return toast('اسم الدالة غير صالح','bad')}
+ const sbChanged=su!==S.sbUrl;
+ S.appId=a;S.proxy=p;S.sbUrl=su;S.sbKey=su?sk:'';S.sbFn=sf;S.env=$('cfE').value;S.connOk=null;persist();toast(sbChanged?'تم الحفظ. سجّل الخروج ثم الدخول من جديد ليسري تغيير Supabase.':'تم حفظ الإعدادات (لا أسرار فيها)','ok');updConn();drawCfg()}
+function persist(){jset('osl_cfg',{appId:S.appId,proxy:S.proxy,sbUrl:S.sbUrl,sbKey:S.sbKey,sbFn:S.sbFn,env:S.env,gh:S.gh})}
+async function testConn(){
+ try{needApp();await api('GET','/health');await os('GET','/notifications?app_id='+S.appId+'&limit=1');S.connOk=true;S.lastCheck=Date.now();
+  toast('نجح الاتصال بالوسيط وبـ OneSignal (تم قبول المفتاح)','ok');log('اختبار الاتصال','','نجاح')}
+ catch(e){S.connOk=false;S.lastCheck=Date.now();toast('فشل الاتصال: '+e.message,'bad');log('اختبار الاتصال','','فشل',e.code,e.message)}
+ updConn();drawCfg()}
+
+/* ================= بيانات الإشعارات الحية ================= */
+let NOTIFS=null; // null = لم تُحمَّل
+async function loadLive(){
+ try{needApp();const r=await os('GET','/notifications?app_id='+S.appId+'&limit=50');NOTIFS=(r&&r.notifications)||[];
+  toast('تم تحميل '+NOTIFS.length+' إشعارًا من OneSignal','ok');S.connOk=true;updConn()}
+ catch(e){toast(e.message,'bad');log('تحميل الإشعارات','','فشل',e.code,e.message)}
+ drawDash();drawCamp();drawAna()}
+const ntTitle=n=>(n.headings&&(n.headings.ar||n.headings.en))||'(بدون عنوان)';
+function ntStatus(n){if(n.canceled)return 'ملغاة';const sa=toMs(n.send_after);if(sa>Date.now()&&!n.completed_at)return 'مجدولة';if(n.completed_at)return 'مكتملة';if(n.queued_at||nz(n.remaining)>0)return 'قيد التنفيذ';return 'غير معروفة'}
+const okN=n=>nz(n.successful),clk=n=>nz(n.converted),badN=n=>nz(n.failed)+nz(n.errored);
+
+/* ================= لوحة المعلومات ================= */
+const DEMO={days:Array.from({length:14},(_,i)=>`${i+1}`),sent:[120,180,150,220,260,210,300,280,310,330,290,360,380,400],click:[9,14,11,19,24,17,30,26,31,35,27,38,41,44]};
+let APPINFO=null;
+function drawDash(){
+ const live=NOTIFS!==null;$('dashMode').innerHTML=live?stb('live'):stb('demo')+' <span class="hint">اتصل بالوسيط واضغط «تحديث» لعرض أرقام فعلية.</span>';
+ const per=+$('dPer').value;const cs=$('dCamp');
+ let list=live?NOTIFS:[];
+ if(live){const cur=cs.value;cs.innerHTML='<option value="">كل الحملات</option>'+list.map(n=>`<option value="${esc(n.id)}">${esc(ntTitle(n)).slice(0,40)}</option>`).join('');cs.value=cur;
+  const lim=Date.now()-per*864e5;list=list.filter(n=>toMs(n.queued_at||n.send_after)>=lim);if(cs.value)list=list.filter(n=>n.id===cs.value)}
+ const K=[];
+ if(live){const s=list.reduce((a,n)=>a+okN(n),0),c=list.reduce((a,n)=>a+clk(n),0),f=list.reduce((a,n)=>a+badN(n),0);
+  K.push(['إجمالي المشتركين',APPINFO&&APPINFO.players!=null?APPINFO.players:'غير محمّل']);
+  K.push(['المشتركون النشطون (قابلون للمراسلة)',APPINFO&&APPINFO.messageable_players!=null?APPINFO.messageable_players:'غير محمّل']);
+  K.push(['إشعارات مرسلة (في الفترة)',list.filter(n=>n.completed_at||n.queued_at).length]);
+  K.push(['إشعارات مجدولة',list.filter(n=>ntStatus(n)==='مجدولة').length]);
+  K.push(['معدل التسليم',s+f?(s/(s+f)*100).toFixed(1)+'%':'غير متاح']);
+  K.push(['معدل النقر',s?(c/s*100).toFixed(1)+'%':'غير متاح']);
+  K.push(['حملات نشطة',list.filter(n=>['مجدولة','قيد التنفيذ'].includes(ntStatus(n))).length]);
+ }else{K.push(['إجمالي المشتركين','—'],['المشتركون النشطون','—'],['إشعارات مرسلة',DEMO.sent.reduce((a,b)=>a+b,0)],['إشعارات مجدولة',3],['معدل التسليم','96.4%'],['معدل النقر','10.2%'],['حملات نشطة',2])}
+ $('kpis').innerHTML=K.map(k=>`<div class="kpi"><small>${esc(k[0])}</small><b>${esc(k[1])}</b>${live?'':'<small class="st demo">تجريبي</small>'}</div>`).join('');
+ let labels,sent,click;
+ if(live){const m={};list.forEach(n=>{const d=new Date(toMs(n.queued_at||n.send_after)).toISOString().slice(5,10);m[d]=m[d]||[0,0];m[d][0]+=okN(n);m[d][1]+=clk(n)});
+  labels=Object.keys(m).sort();sent=labels.map(l=>m[l][0]);click=labels.map(l=>m[l][1])}
+ else{labels=DEMO.days;sent=DEMO.sent;click=DEMO.click}
+ $('chart').innerHTML=chartSVG(labels,[{n:'تسليم',v:sent,c:'var(--pri)'},{n:'نقرات',v:click,c:'var(--ok)'}])+(live?'':'<p class="hint">رسم توضيحي ببيانات تجريبية.</p>');
+ drawDashLog()}
+function chartSVG(labels,series){if(!labels.length)return '<p class="hint">لا توجد بيانات في هذه الفترة.</p>';
+ const W=700,H=220,P=30,max=Math.max(1,...series.flatMap(s=>s.v)),bw=(W-P*2)/labels.length;
+ let g='';labels.forEach((l,i)=>{series.forEach((s,j)=>{const h=(H-P*2)*s.v[i]/max,w=bw/(series.length+1);g+=`<rect x="${P+i*bw+j*w+w/2}" y="${H-P-h}" width="${w*.9}" height="${h}" fill="${s.c}" rx="2"><title>${esc(s.n)}: ${s.v[i]}</title></rect>`});
+  g+=`<text x="${P+i*bw+bw/2}" y="${H-10}" font-size="10" text-anchor="middle" fill="var(--mut)">${esc(l)}</text>`});
+ return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img"><line x1="${P}" y1="${H-P}" x2="${W-P}" y2="${H-P}" stroke="var(--line)"/><text x="${P}" y="14" font-size="10" fill="var(--mut)">${max}</text>${g}</svg><div class="hint">${series.map(s=>`<span style="color:${s.c}">■</span> ${esc(s.n)}`).join(' &nbsp; ')}</div>`}
+async function loadApp(){try{needApp();APPINFO=await os('GET','/apps/'+S.appId);
+ $('appInfo').innerHTML=`<p>الاسم: <b>${esc(APPINFO.name)}</b></p><p>إجمالي الأجهزة/الاشتراكات: <b>${esc(APPINFO.players)}</b> · قابلة للمراسلة: <b>${esc(APPINFO.messageable_players)}</b></p>`;
+ drawDash()}catch(e){$('appInfo').innerHTML=`<p class="hint" style="color:var(--err)">${esc(e.message)} — هذا العدّاد قد يتطلب Organization API Key (اختياري في الوسيط: ONESIGNAL_ORG_KEY)، وبقية اللوحة تعمل بدونه.</p>`}}
+
+/* ================= محرر الإشعارات ================= */
+const SEGS_BASE=()=>jget('osl_segs',[]);
+function tgUI(){const v=document.querySelector('input[name=tg]:checked').value;let h='';
+ if(v==='segment'){const l=SEGS_BASE().map(s=>s.name);h=`<label>اسم الشريحة (كما في OneSignal)</label><input id="tgSeg" list="segl" dir="ltr"><datalist id="segl">${l.map(x=>`<option value="${esc(x)}">`).join('')}</datalist><p class="hint">اكتب اسم شريحة موجودة فعلًا في OneSignal.</p>`}
+ if(v==='tag')h=`<div class="grid g3"><div><label>المفتاح</label><input id="tgK" dir="ltr"></div><div><label>العلاقة</label><select id="tgR"><option>=</option><option>!=</option><option>&gt;</option><option>&lt;</option><option>exists</option><option>not_exists</option></select></div><div><label>القيمة</label><input id="tgV" dir="ltr"></div></div>`;
+ if(v==='section')h=`<label>القسم</label><select id="tgSec"><option value="featured">فيديوهات مميزة</option><option value="latest">أحدث الفيديوهات</option><option value="popular">الأكثر مشاهدة</option><option value="notif">إعدادات الإشعارات</option></select><p class="hint">يعتمد على الوسم <code>last_section</code> الذي يضعه الموقع عند زيارة المشترك للقسم.</p>`;
+ if(v==='geo')h=`<div class="grid g2"><div><label>اللغة (رمز مثل ar)</label><input id="tgL" dir="ltr"></div><div><label>الدولة (رمز مثل EG)</label><input id="tgC" dir="ltr" maxlength="2"></div></div>`;
+ if(v==='ext')h=`<label>External IDs (مفصولة بفواصل)</label><textarea id="tgE" dir="ltr"></textarea><p class="hint">يتطلب أن يكون الموقع قد استدعى <code>OneSignal.login(external_id)</code> (يدعمه index.html عبر ?external_id=).</p>`;
+ $('tgBody').innerHTML=h;pv()}
+function smUI(){const v=document.querySelector('input[name=sm]:checked').value;let h='';
+ const tzs=['Africa/Cairo','Asia/Riyadh','Asia/Dubai','Europe/London','America/New_York','UTC'];
+ const tz=`<label>المنطقة الزمنية</label><select id="smTz" onchange="smInfo()">${tzs.map(z=>`<option>${z}</option>`).join('')}</select>`;
+ if(v==='at')h=`<div class="grid g2"><div><label>التاريخ والوقت</label><input type="datetime-local" id="smDt" onchange="smInfo()"></div><div>${tz}</div></div>`;
+ if(v==='local')h=`<div class="grid g2"><div><label>الوقت المحلي لكل مستخدم</label><input type="time" id="smTm" value="09:00" onchange="smInfo()"></div><div><label>التاريخ (اختياري)</label><input type="datetime-local" id="smDt" onchange="smInfo()" style="display:none"></div></div><p class="hint">يُرسل عبر <code>delivery_time_of_day</code> مع <code>delayed_option: timezone</code>. قد لا تدعمه بعض الخطط وسيرفضه OneSignal برسالة تظهر لك.</p>`;
+ $('smBody').innerHTML=h;smInfo()}
+function tzIso(local,tz){const[d,t]=local.split('T');const[Y,M,D]=d.split('-').map(Number),[h,m]=t.split(':').map(Number);const guess=Date.UTC(Y,M-1,D,h,m);
+ const p=new Intl.DateTimeFormat('en-US',{timeZone:tz,hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date(guess)).reduce((a,x)=>(a[x.type]=x.value,a),{});
+ const asU=Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute);const off=Math.round((asU-guess)/60000);
+ const sg=off>=0?'+':'-',a=Math.abs(off);return{iso:`${d}T${t}:00${sg}${String(Math.floor(a/60)).padStart(2,'0')}:${String(a%60).padStart(2,'0')}`,at:new Date(guess-off*60000)}}
+function smInfo(){const v=document.querySelector('input[name=sm]:checked').value,i=$('smInfo');
+ if(v==='now'){i.textContent='الإرسال فور التأكيد.';return}
+ if(v==='at'){const dt=$('smDt').value;if(!dt){i.textContent='اختر التاريخ والوقت.';return}const r=tzIso(dt,$('smTz').value);i.textContent='وقت الإرسال المتوقع: '+r.at.toLocaleString('ar-EG')+' (بتوقيتك المحلي) — '+r.iso;return}
+ i.textContent='سيُرسل في '+($('smTm')?$('smTm').value:'')+' بتوقيت كل مستخدم (يحتاج دعم الخطة).'}
+function insVar(){const k=prompt('اسم الوسم/المتغير (مثال: first_name)');if(!k||!/^[\w]+$/.test(k))return;const d=prompt('نص بديل عند غياب القيمة','صديقي')||'';
+ $('nB').value+=` {{ ${k} | default: '${d.replace(/'/g,'')}' }}`;pv()}
+function pv(show){const t=$('nT').value||'عنوان الإشعار',b=$('nB').value||'نص الرسالة يظهر هنا',ic=$('nI').value,im=$('nG').value;
+ const card=`<div class="pv">${httpsOk(ic)?`<img src="${esc(ic)}" alt="">`:'<img alt="" style="display:grid">'}<div style="flex:1"><small>OneSignal Lab · الآن</small><b>${esc(t)}</b><span>${esc(b)}</span>${httpsOk(im)?`<img class="pi" src="${esc(im)}" alt="">`:''}</div></div>`;
+ $('pvPhone').innerHTML=card;$('pvDesk').innerHTML=card;
+ const r=buildPayload('send',true);$('pj').textContent=r.payload?JSON.stringify(r.payload,null,2):(r.errors?'— '+r.errors.join('\n— '):'—');
+ if(show===true)toast('تم تحديث المعاينة','ok')}
+['nU','nD'].forEach(i=>$(i).addEventListener('input',()=>pv()));
+function buildPayload(mode,quiet){
+ const E=[],t=$('nT').value.trim(),b=$('nB').value.trim(),u=$('nU').value.trim(),ic=$('nI').value.trim(),im=$('nG').value.trim(),ds=$('nD').value.trim();
+ if(!t)E.push('العنوان مطلوب');if(!b)E.push('نص الرسالة مطلوب');
+ if(u&&!httpsOk(u))E.push('رابط الوجهة يجب أن يكون https');if(ic&&!httpsOk(ic))E.push('رابط الأيقونة يجب أن يكون https');if(im&&!httpsOk(im))E.push('رابط الصورة يجب أن يكون https');
+ let data;if(ds){try{data=JSON.parse(ds);if(typeof data!=='object'||Array.isArray(data))throw 0}catch(e){E.push('data يجب أن يكون JSON (كائن) صالحًا')}}
+ const p={app_id:S.appId,target_channel:'push',headings:{en:t,ar:t},contents:{en:b,ar:b},idempotency_key:uid()};
+ if(!uuidRe.test(S.appId))E.push('App ID غير مضبوط في الإعدادات');
+ if(u)p.url=u;if(ic)p.chrome_web_icon=ic;if(im)p.chrome_web_image=im;if(data)p.data=data;
+ if(mode==='test'){const x=$('nTest').value.trim();if(!x)E.push('أدخل External ID أو Subscription ID للإرسال التجريبي');
+  else if(uuidRe.test(x))p.include_subscription_ids=[x];else if(/^[\w.\-@]{1,64}$/.test(x))p.include_aliases={external_id:[x]};else E.push('هدف الاختبار غير صالح')}
+ else{const v=document.querySelector('input[name=tg]:checked').value;
+  if(v==='all')p.included_segments=['Subscribed Users'];
+  if(v==='segment'){const s=($('tgSeg')||{}).value;if(!s)E.push('اسم الشريحة مطلوب');else p.included_segments=[s.trim()]}
+  if(v==='tag'){const k=$('tgK').value.trim(),r=$('tgR').value,val=$('tgV').value.trim();if(!k)E.push('مفتاح الوسم مطلوب');else{const f={field:'tag',key:k,relation:r};if(r!=='exists'&&r!=='not_exists'){if(!val)E.push('قيمة الوسم مطلوبة');f.value=val}p.filters=[f]}}
+  if(v==='section')p.filters=[{field:'tag',key:'last_section',relation:'=',value:$('tgSec').value}];
+  if(v==='geo'){const l=$('tgL').value.trim().toLowerCase(),c=$('tgC').value.trim().toUpperCase(),f=[];if(l)f.push({field:'language',relation:'=',value:l});if(c)f.push({field:'country',relation:'=',value:c});if(!f.length)E.push('أدخل لغة أو دولة');else p.filters=f}
+  if(v==='ext'){const ids=$('tgE').value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean);if(!ids.length)E.push('أدخل External ID واحدًا على الأقل');else if(ids.some(x=>!/^[\w.\-@]{1,64}$/.test(x)))E.push('External ID غير صالح');else p.include_aliases={external_id:ids}}
+  const sm=document.querySelector('input[name=sm]:checked').value;
+  if(mode==='sched'&&sm==='now')E.push('اختر وقتًا محددًا أو وقتًا محليًا للجدولة');
+  if(mode==='send'&&sm!=='now'&&!quiet)E.push('للإرسال الآن اختر «الآن»، أو استخدم زر الجدولة');
+  if(sm==='at'&&mode==='sched'||sm==='at'&&quiet){const dt=$('smDt')&&$('smDt').value;if(!dt){if(!quiet)E.push('اختر التاريخ والوقت')}else{const r=tzIso(dt,$('smTz').value);if(r.at.getTime()<Date.now()+60000)E.push('وقت الجدولة يجب أن يكون في المستقبل');p.send_after=r.iso}}
+  if(sm==='local'&&(mode==='sched'||quiet)){const tm=$('smTm')&&$('smTm').value;if(tm){const d=new Date(tm?'1970-01-01T'+tm:0);p.delivery_time_of_day=(d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0')+(d.getHours()>=12?'PM':'AM');p.delayed_option='timezone'}else E.push('اختر الوقت المحلي')}
+  if(S.smart&&!p.delayed_option)p.delayed_option=S.smart}
+ return E.length?{errors:E,payload:quiet?p:null}:{payload:p}}
+let sending=false;
+async function doSend(mode){
+ if(sending)return;const r=buildPayload(mode);if(!r.payload)return toast(r.errors[0],'bad'),$('pj').textContent='— '+r.errors.join('\n— ');
+ const p=r.payload;$('pj').textContent=JSON.stringify(p,null,2);
+ const lbl={test:'إرسال تجريبي',send:'إرسال الآن',sched:'جدولة'}[mode];
+ const ok=await confirmDlg('تأكيد: '+lbl,`<p>سيُرسل الإشعار فعليًا إلى OneSignal عبر الوسيط.</p><p><b>${esc(p.headings.ar)}</b></p><p class="hint">${esc(p.contents.ar)}</p><p class="hint">الهدف: ${p.include_subscription_ids?'اشتراك محدد':p.include_aliases?'External IDs ('+p.include_aliases.external_id.length+')':p.included_segments?'شريحة: '+esc(p.included_segments[0]):'فلاتر ('+(p.filters||[]).length+')'}${p.send_after?' · الموعد: '+esc(p.send_after):''}${p.delivery_time_of_day?' · '+esc(p.delivery_time_of_day)+' محلي':''}</p>`);
+ if(!ok)return;await dispatch(p,lbl)}
+async function dispatch(p,lbl,retry){
+ sending=true;$('bSend').disabled=$('bSched').disabled=true;
+ try{const res=await os('POST','/notifications',p);
+  if(!res||!res.id){ // لا نُعلن النجاح بدون معرّف
+   const msg=res&&res.errors?JSON.stringify(res.errors):'لم يُرجع OneSignal معرّف رسالة';
+   throw mkErr('NO_ID','لم يتم الإرسال: '+msg,res)}
+  toast(lbl+': قبِل OneSignal الطلب — المعرّف '+res.id+(res.recipients!=null?' · مستلمون متوقعون: '+res.recipients:''),'ok');
+  log(lbl,res.id,'نجاح','',p.headings.ar);removeFail(p.idempotency_key)}
+ catch(e){toast('فشل '+lbl+': '+e.message,'bad');log(lbl,'','فشل',e.code,e.message);
+  if(e.code!=='NO_PROXY'&&e.code!=='NO_APP'){addFail({p,lbl,err:e.message,at:Date.now()})}}
+ finally{sending=false;$('bSend').disabled=$('bSched').disabled=false}}
+/* إعادة المحاولة: نفس idempotency_key يمنع التكرار */
+let FAILS=jget('osl_fails',[]);
+function addFail(f){if(!FAILS.some(x=>x.p.idempotency_key===f.p.idempotency_key))FAILS.unshift(f);jset('osl_fails',FAILS.slice(0,20));drawFail()}
+function removeFail(k){FAILS=FAILS.filter(x=>x.p.idempotency_key!==k);jset('osl_fails',FAILS);drawFail()}
+function drawFail(){$('failTbl').innerHTML=`<table><thead><tr><th>الوقت</th><th>العنوان</th><th>الخطأ</th><th></th></tr></thead><tbody>${FAILS.map((f,i)=>`<tr><td>${fmt(f.at)}</td><td>${esc(f.p.headings.ar)}</td><td>${esc(f.err)}</td><td><button class="btn sm" onclick="retryF(${i})">إعادة المحاولة</button> <button class="btn sec sm" onclick="removeFail('${esc(f.p.idempotency_key)}')">إهمال</button></td></tr>`).join('')||'<tr><td colspan=4 class="hint">لا توجد.</td></tr>'}</tbody></table>`}
+async function retryF(i){const f=FAILS[i];if(!f)return;
+ if(f.p.send_after&&toMs(f.p.send_after)<Date.now())return toast('انتهى موعد الجدولة الأصلي، أعد إنشاء الحملة.','bad');
+ if(await confirmDlg('إعادة محاولة الإرسال','<p>سيُعاد نفس الطلب بنفس <code>idempotency_key</code>؛ إن كان الطلب الأول قد نجح فعلًا فلن يتكرر الإرسال.</p><p><b>'+esc(f.p.headings.ar)+'</b></p>'))dispatch(f.p,'إعادة محاولة',true)}
+
+/* مسودات */
+let DR=jget('osl_drafts',[]);
+const formState=()=>({t:$('nT').value,b:$('nB').value,u:$('nU').value,i:$('nI').value,g:$('nG').value,d:$('nD').value});
+function setForm(s){$('nT').value=s.t||'';$('nB').value=s.b||'';$('nU').value=s.u||'';$('nI').value=s.i||'';$('nG').value=s.g||'';$('nD').value=s.d||'';pv()}
+function saveDraft(){const s=formState();if(!s.t&&!s.b)return toast('لا يوجد محتوى لحفظه','bad');DR.unshift({id:uid(),at:Date.now(),...s});DR=DR.slice(0,30);jset('osl_drafts',DR);drawDraft();toast('حُفظت المسودة في هذا المتصفح فقط (ليست على الخادم)','ok');log('حفظ مسودة محلية','','نجاح')}
+function drawDraft(){$('draftTbl').innerHTML=`<table><thead><tr><th>التاريخ</th><th>العنوان</th><th></th></tr></thead><tbody>${DR.map((d,i)=>`<tr><td>${fmt(d.at)}</td><td>${esc(d.t)}</td><td><button class="btn sm" onclick="useDraft(${i})">فتح في المحرر</button> <button class="btn sec sm" onclick="delDraft(${i})">حذف</button></td></tr>`).join('')||'<tr><td colspan=3 class="hint">لا توجد مسودات.</td></tr>'}</tbody></table>`}
+function useDraft(i){setForm(DR[i]);go('notif')}
+function delDraft(i){DR.splice(i,1);jset('osl_drafts',DR);drawDraft()}
+
+/* ================= الحملات ================= */
+function drawCamp(){drawDraft();drawFail();
+ if(NOTIFS===null){$('campTbl').innerHTML='<p class="hint">لم يتم التحميل بعد (يتطلب الوسيط وApp ID). اضغط «تحديث».</p>';return}
+ const q=$('cQ').value.trim().toLowerCase(),s=$('cS').value;
+ const rows=NOTIFS.filter(n=>(!s||ntStatus(n)===s)&&(!q||ntTitle(n).toLowerCase().includes(q)||String(n.id).includes(q)));
+ $('campTbl').innerHTML=`<table><thead><tr><th>العنوان</th><th>الحالة</th><th>الموعد</th><th>تسليم</th><th>نقرات</th><th>فشل</th><th></th></tr></thead><tbody>${rows.map(n=>`<tr><td>${esc(ntTitle(n))}<br><code>${esc(n.id)}</code></td><td>${ntStatus(n)}</td><td>${fmt(toMs(n.send_after||n.queued_at))}</td><td>${okN(n)}</td><td>${clk(n)}</td><td>${badN(n)}</td><td><button class="btn sec sm" onclick="showDetail('${esc(n.id)}')">تفاصيل</button> <button class="btn sec sm" onclick="copyCamp('${esc(n.id)}')">نسخ</button> ${['مجدولة','قيد التنفيذ'].includes(ntStatus(n))?`<button class="btn dng sm" onclick="cancelCamp('${esc(n.id)}')">إلغاء</button>`:''}</td></tr>`).join('')||'<tr><td colspan=7 class="hint">لا نتائج.</td></tr>'}</tbody></table>`}
+async function showDetail(id){go('ana');$('detail').textContent='جارٍ التحميل…';
+ try{needApp();const r=await os('GET','/notifications/'+encodeURIComponent(id)+'?app_id='+S.appId);$('detail').textContent=JSON.stringify(r,null,2)}catch(e){$('detail').textContent=e.message}}
+function copyCamp(id){const n=(NOTIFS||[]).find(x=>x.id===id);if(!n)return;
+ setForm({t:(n.headings&&(n.headings.ar||n.headings.en))||'',b:(n.contents&&(n.contents.ar||n.contents.en))||'',u:n.url||'',i:n.chrome_web_icon||'',g:n.chrome_web_image||'',d:n.data?JSON.stringify(n.data):''});go('notif');toast('نُسخ محتوى الحملة إلى المحرر (اختر الجمهور والموعد من جديد)','ok')}
+async function cancelCamp(id){if(!await confirmDlg('إلغاء حملة','<p>سيُوقف OneSignal الإشعار المجدول أو الجاري إرساله. لا يمكن التراجع.</p><code>'+esc(id)+'</code>'))return;
+ try{needApp();await os('DELETE','/notifications/'+encodeURIComponent(id)+'?app_id='+S.appId);toast('تم طلب الإلغاء بنجاح','ok');log('إلغاء حملة',id,'نجاح');loadLive()}catch(e){toast('فشل الإلغاء: '+e.message,'bad');log('إلغاء حملة',id,'فشل',e.code,e.message)}}
+let JS_=jget('osl_journey',[]);
+function addJ(){const v=$('jS').value.trim();if(!v)return;JS_.push(v);jset('osl_journey',JS_);$('jS').value='';drawJ()}
+function drawJ(){$('jList').innerHTML=JS_.map((s,i)=>`<li>${esc(s)} <button class="btn sec sm" onclick="JS_.splice(${i},1);jset('osl_journey',JS_);drawJ()">×</button></li>`).join('')}
+
+/* ================= الشرائح ================= */
+let SR=[{field:'tag',key:'',relation:'=',value:'',join:'AND'}];
+function addSR(){SR.push({field:'tag',key:'',relation:'=',value:'',join:'AND'});drawSR()}
+function drawSR(){$('sRows').innerHTML=SR.map((r,i)=>`<div class="ft"><div class="grid g4">
+ ${i?`<div><label>الربط</label><select onchange="SR[${i}].join=this.value"><option ${r.join==='AND'?'selected':''}>AND</option><option ${r.join==='OR'?'selected':''}>OR</option></select></div>`:''}
+ <div><label>الحقل</label><select onchange="SR[${i}].field=this.value">${['tag','language','country','session_count','last_session','first_session'].map(f=>`<option ${r.field===f?'selected':''}>${f}</option>`).join('')}</select></div>
+ <div><label>المفتاح (للوسوم)</label><input dir="ltr" value="${esc(r.key)}" oninput="SR[${i}].key=this.value"></div>
+ <div><label>العلاقة</label><select onchange="SR[${i}].relation=this.value">${['=','!=','>','<','exists','not_exists'].map(f=>`<option ${r.relation===f?'selected':''}>${esc(f)}</option>`).join('')}</select></div>
+ <div><label>القيمة</label><input dir="ltr" value="${esc(r.value)}" oninput="SR[${i}].value=this.value"></div>
+ <div><label>&nbsp;</label><button class="btn sec sm" onclick="SR.splice(${i},1);if(!SR.length)addSR();drawSR()">حذف</button></div></div></div>`).join('')}
+function segFilters(){const out=[];for(const[i,r]of SR.entries()){if(i&&r.join==='OR')out.push({operator:'OR'});
+ const f={field:r.field,relation:r.relation};if(r.field==='tag'){if(!r.key.trim())throw mkErr('V','مفتاح الوسم مطلوب في الشرط '+(i+1));f.key=r.key.trim()}
+ if(!['exists','not_exists'].includes(r.relation)){if(r.value==='')throw mkErr('V','القيمة مطلوبة في الشرط '+(i+1));f.value=r.value}out.push(f)}return out}
+function saveSegLocal(){try{const n=$('sN').value.trim();if(!n)throw mkErr('V','اسم الشريحة مطلوب');const s=SEGS_BASE();s.unshift({name:n,desc:$('sD').value,filters:segFilters(),at:Date.now()});jset('osl_segs',s);drawSegLocal();toast('حُفظت محليًا فقط (غير موجودة في OneSignal)','ok')}catch(e){toast(e.message,'bad')}}
+async function saveSegRemote(){try{needApp();const n=$('sN').value.trim();if(!n)throw mkErr('V','اسم الشريحة مطلوب');const f=segFilters();
+ if(!await confirmDlg('إنشاء شريحة في OneSignal','<p><b>'+esc(n)+'</b></p><pre>'+esc(JSON.stringify(f,null,1))+'</pre>'))return;
+ const r=await os('POST','/apps/'+S.appId+'/segments',{name:n,filters:f});toast('أنشأ OneSignal الشريحة'+(r&&r.id?' — '+r.id:''),'ok');log('إنشاء شريحة',r&&r.id,'نجاح','',n);loadSegs()}
+ catch(e){toast(e.message,'bad');if(e.code!=='V')log('إنشاء شريحة','','فشل',e.code,e.message)}}
+function drawSegLocal(){const s=SEGS_BASE();$('segLocal').innerHTML=`<table><thead><tr><th>الاسم</th><th>الوصف</th><th>الشروط</th><th></th></tr></thead><tbody>${s.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${esc(x.desc)}</td><td><code>${esc(JSON.stringify(x.filters))}</code></td><td><button class="btn sec sm" onclick="const a=SEGS_BASE();a.splice(${i},1);jset('osl_segs',a);drawSegLocal()">حذف</button></td></tr>`).join('')||'<tr><td colspan=4 class="hint">لا شرائح محلية.</td></tr>'}</tbody></table>`}
+async function loadSegs(){try{needApp();const r=await os('GET','/apps/'+S.appId+'/segments');const a=(r&&r.segments)||[];
+ $('segRemote').innerHTML=`<table><thead><tr><th>الاسم</th><th>المعرّف</th><th>قابلة للقراءة</th></tr></thead><tbody>${a.map(x=>`<tr><td>${esc(x.name)}</td><td><code>${esc(x.id)}</code></td><td>${esc(x.is_active!=null?x.is_active:'')}</td></tr>`).join('')||'<tr><td colspan=3 class="hint">لا شرائح.</td></tr>'}</tbody></table>`}
+ catch(e){$('segRemote').innerHTML=`<p class="hint" style="color:var(--err)">${esc(e.message)}</p>`}}
+
+/* ================= القوالب ================= */
+let TP=jget('osl_tpls',[]);
+function drawTpl(){const q=$('tQ').value.trim().toLowerCase(),c=$('tC').value;
+ const cats=[...new Set(TP.map(t=>t.cat).filter(Boolean))];$('tC').innerHTML='<option value="">الكل</option>'+cats.map(x=>`<option ${x===c?'selected':''}>${esc(x)}</option>`).join('');
+ const L=TP.map((t,i)=>({t,i})).filter(({t})=>(!q||t.name.toLowerCase().includes(q))&&(!c||t.cat===c));
+ $('tplList').innerHTML=`<table><thead><tr><th>الاسم</th><th>التصنيف</th><th>العنوان</th><th></th></tr></thead><tbody>${L.map(({t,i})=>`<tr><td>${esc(t.name)}</td><td>${esc(t.cat)}</td><td>${esc(t.title)}</td><td><button class="btn sm" onclick="useTpl(${i})">استخدام</button> <button class="btn sec sm" onclick="editTpl(${i})">تعديل</button> <button class="btn sec sm" onclick="dupTpl(${i})">نسخ</button> <button class="btn dng sm" onclick="delTpl(${i})">حذف</button></td></tr>`).join('')||'<tr><td colspan=4 class="hint">لا قوالب.</td></tr>'}</tbody></table>`}
+function saveTpl(){const t={id:$('tId').value||uid(),name:$('tN').value.trim(),cat:$('tK').value.trim(),title:$('tT').value.trim(),body:$('tB').value.trim(),url:$('tU').value.trim(),img:$('tG').value.trim()};
+ if(!t.name||!t.title||!t.body)return toast('الاسم والعنوان والنص مطلوبة','bad');if(t.url&&!httpsOk(t.url)||t.img&&!httpsOk(t.img))return toast('الروابط يجب أن تكون https','bad');
+ const i=TP.findIndex(x=>x.id===t.id);if(i>=0)TP[i]=t;else TP.unshift(t);jset('osl_tpls',TP);clearTpl();drawTpl();toast('حُفظ القالب محليًا (ليس في OneSignal)','ok')}
+function clearTpl(){['tId','tN','tK','tT','tB','tU','tG'].forEach(i=>$(i).value='')}
+function editTpl(i){const t=TP[i];$('tId').value=t.id;$('tN').value=t.name;$('tK').value=t.cat;$('tT').value=t.title;$('tB').value=t.body;$('tU').value=t.url;$('tG').value=t.img}
+function dupTpl(i){const t={...TP[i],id:uid(),name:TP[i].name+' (نسخة)'};TP.splice(i+1,0,t);jset('osl_tpls',TP);drawTpl()}
+async function delTpl(i){if(!await confirmDlg('حذف قالب','<p>سيُحذف القالب المحلي «'+esc(TP[i].name)+'».</p>'))return;TP.splice(i,1);jset('osl_tpls',TP);drawTpl()}
+function useTpl(i){const t=TP[i];setForm({t:t.title,b:t.body,u:t.url,g:t.img});go('notif')}
+function saveTplFromForm(){const s=formState();if(!s.t||!s.b)return toast('العنوان والنص مطلوبان','bad');go('tpl');$('tT').value=s.t;$('tB').value=s.b;$('tU').value=s.u;$('tG').value=s.g;$('tN').focus();toast('أكمل الاسم ثم اضغط حفظ القالب')}
+async function loadOsTpl(){try{needApp();const r=await os('GET','/templates?app_id='+S.appId);const a=(r&&r.templates)||[];
+ $('osTpl').innerHTML=`<table><thead><tr><th>الاسم</th><th>المعرّف</th><th>أُنشئ</th></tr></thead><tbody>${a.map(x=>`<tr><td>${esc(x.name)}</td><td><code>${esc(x.id)}</code></td><td>${esc(x.created_at||'')}</td></tr>`).join('')||'<tr><td colspan=3 class="hint">لا قوالب.</td></tr>'}</tbody></table>`}
+ catch(e){$('osTpl').innerHTML=`<p class="hint" style="color:var(--err)">${esc(e.message)}</p>`}}
+
+/* ================= التحليلات ================= */
+function drawAna(){
+ if(NOTIFS===null){return}
+ const per=+$('aPer').value,now=Date.now(),d=864e5;
+ const win=(a,b)=>NOTIFS.filter(n=>{const t=toMs(n.queued_at||n.send_after);return t>=now-b*d&&t<now-a*d});
+ const agg=l=>({n:l.length,s:l.reduce((x,n)=>x+okN(n),0),c:l.reduce((x,n)=>x+clk(n),0),f:l.reduce((x,n)=>x+badN(n),0)});
+ const A=agg(win(0,per)),B=agg(win(per,per*2));
+ const pc=(a,b)=>b?((a-b)/b*100).toFixed(0)+'%':'—';
+ $('cmpBox').innerHTML=[['إشعارات',A.n,B.n],['تسليم',A.s,B.s],['نقرات',A.c,B.c]].map(([k,a,b])=>`<div class="kpi"><small>${k} (الفترة الحالية مقابل السابقة)</small><b>${a}</b><small>السابقة: ${b} · التغيّر: ${pc(a,b)}</small></div>`).join('');
+ $('anaTbl').innerHTML=`<table id="anaT"><thead><tr><th>الحملة</th><th>التاريخ</th><th>تسليم</th><th>فشل</th><th>نقرات</th><th>معدل النقر</th></tr></thead><tbody>${NOTIFS.map(n=>`<tr><td>${esc(ntTitle(n))}</td><td>${fmt(toMs(n.queued_at||n.send_after))}</td><td>${okN(n)}</td><td>${badN(n)}</td><td>${clk(n)}</td><td>${okN(n)?(clk(n)/okN(n)*100).toFixed(1)+'%':'غير متاح'}</td></tr>`).join('')}</tbody></table>`;
+ const g={};NOTIFS.forEach(n=>{const k=n.included_segments&&n.included_segments.length?n.included_segments.join('، '):(n.filters&&n.filters.length?'filters':'أخرى');g[k]=g[k]||{n:0,s:0,c:0};g[k].n++;g[k].s+=okN(n);g[k].c+=clk(n)});
+ $('segPerf').innerHTML=`<table><thead><tr><th>الشريحة</th><th>حملات</th><th>تسليم</th><th>نقرات</th><th>معدل النقر</th></tr></thead><tbody>${Object.entries(g).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.n}</td><td>${v.s}</td><td>${v.c}</td><td>${v.s?(v.c/v.s*100).toFixed(1)+'%':'غير متاح'}</td></tr>`).join('')}</tbody></table>`}
+function exportCSV(){if(!NOTIFS||!NOTIFS.length)return toast('لا توجد بيانات محمّلة للتصدير','bad');
+ const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")+'"';
+ const rows=[['id','title','date','delivered','failed','clicks','status'],...NOTIFS.map(n=>[n.id,ntTitle(n),new Date(toMs(n.queued_at||n.send_after)||0).toISOString(),okN(n),badN(n),clk(n),ntStatus(n)])];
+ const b=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='onesignal-report.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);log('تصدير CSV','','نجاح')}
+
+/* ================= A/B ================= */
+let AB=[];function addAB(){if(AB.length>=4)return toast('الحد الأقصى 4 نسخ','bad');AB.push({t:'',b:'',p:0});const n=AB.length;AB.forEach(x=>x.p=Math.floor(100/n));AB[0].p+=100-AB.reduce((a,x)=>a+x.p,0);drawAB()}
+function drawAB(){$('abV').innerHTML=AB.map((v,i)=>`<div class="ft"><b>النسخة ${String.fromCharCode(65+i)}</b><div class="grid g3"><div><label>العنوان</label><input value="${esc(v.t)}" oninput="AB[${i}].t=this.value"></div><div><label>الرسالة</label><input value="${esc(v.b)}" oninput="AB[${i}].b=this.value"></div><div><label>النسبة %</label><input type="number" min="1" max="100" value="${v.p}" oninput="AB[${i}].p=+this.value"></div></div>${AB.length>2?`<button class="btn sec sm" style="margin-top:6px" onclick="AB.splice(${i},1);drawAB()">حذف</button>`:''}</div>`).join('');drawABRes()}
+let EXPS=jget('osl_exps',[]);
+async function runAB(){try{needApp();const sum=AB.reduce((a,v)=>a+(+v.p||0),0);
+ if(sum!==100)throw mkErr('V','مجموع النسب يجب أن يساوي 100 (الحالي '+sum+')');
+ if(AB.some(v=>!v.t.trim()||!v.b.trim()))throw mkErr('V','عنوان ورسالة كل نسخة مطلوبان');
+ const u=$('abU').value.trim();if(u&&!httpsOk(u))throw mkErr('V','الرابط يجب أن يكون https');
+ if(!await confirmDlg('إطلاق تجربة A/B','<p>سيُرسل '+AB.length+' إشعارات فعلية، كل نسخة إلى نطاق مختلف من <code>ab_bucket</code> بدون تداخل.</p>'+AB.map((v,i)=>`<p>${String.fromCharCode(65+i)} (${v.p}%): ${esc(v.t)}</p>`).join('')))return;
+ let lo=0;const ex={id:uid(),at:Date.now(),metric:$('abM').value,v:[]};
+ for(const[i,v]of AB.entries()){const hi=lo+v.p;
+  const f=[{field:'tag',key:'ab_bucket',relation:'>',value:String(lo-1)},{field:'tag',key:'ab_bucket',relation:'<',value:String(hi)}];
+  if($('abL').value)f.push({field:'language',relation:'=',value:$('abL').value});
+  const p={app_id:S.appId,target_channel:'push',headings:{en:v.t,ar:v.t},contents:{en:v.b,ar:v.b},filters:f,idempotency_key:uid()};if(u)p.url=u;
+  try{const r=await os('POST','/notifications',p);if(!r||!r.id)throw mkErr('NO_ID','لم يُرجع OneSignal معرّفًا'+(r&&r.errors?': '+JSON.stringify(r.errors):''));ex.v.push({name:String.fromCharCode(65+i),id:r.id,range:[lo,hi],t:v.t});log('A/B إرسال نسخة '+String.fromCharCode(65+i),r.id,'نجاح')}
+  catch(e){log('A/B إرسال نسخة '+String.fromCharCode(65+i),'','فشل',e.code,e.message);toast('فشلت النسخة '+String.fromCharCode(65+i)+': '+e.message+' — توقفت التجربة، راجع ما أُرسل قبلها','bad');break}
+  lo=hi}
+ if(ex.v.length){EXPS.unshift(ex);jset('osl_exps',EXPS.slice(0,10));toast('أُطلقت '+ex.v.length+' نسخ','ok')}drawABRes()}
+ catch(e){toast(e.message,'bad')}}
+function drawABRes(){if(!EXPS.length){$('abRes').innerHTML='<p class="hint">لا توجد تجارب.</p>';return}
+ $('abRes').innerHTML=EXPS.map((x,xi)=>`<div class="ft"><b>${fmt(x.at)}</b> · المعيار: ${x.metric==='click'?'معدل النقر':'معدل التسليم'} <button class="btn sm" onclick="abFetch(${xi})">تحديث النتائج</button><div id="abx${xi}" class="tw">${x.v.map(v=>`<span class="hint">${v.name}: ${esc(v.id)} (${v.range[0]}–${v.range[1]-1}) · </span>`).join('')}</div></div>`).join('')}
+async function abFetch(xi){const x=EXPS[xi];try{needApp();const rs=[];for(const v of x.v){const r=await os('GET','/notifications/'+encodeURIComponent(v.id)+'?app_id='+S.appId);rs.push({v,s:okN(r),c:clk(r),f:badN(r)})}
+ const rate=r=>x.metric==='click'?(r.s?r.c/r.s:0):(r.s+r.f?r.s/(r.s+r.f):0);const enough=rs.every(r=>r.s>=100);
+ let best=null;if(enough)best=rs.reduce((a,b)=>rate(b)>rate(a)?b:a);
+ $('abx'+xi).innerHTML=`<table><thead><tr><th>النسخة</th><th>العنوان</th><th>تسليم</th><th>نقرات</th><th>فشل</th><th>المعدل</th></tr></thead><tbody>${rs.map(r=>`<tr><td>${r.v.name}</td><td>${esc(r.v.t)}</td><td>${r.s}</td><td>${r.c}</td><td>${r.f}</td><td>${(rate(r)*100).toFixed(1)}%</td></tr>`).join('')}</tbody></table><p class="hint">${enough?'الأعلى حاليًا: النسخة '+best.v.name+' (تقدير وصفي، وليس اختبارًا إحصائيًا للدلالة).':'بيانات غير كافية لإعلان فائز (يلزم 100 تسليم على الأقل لكل نسخة).'}</p>`}
+ catch(e){toast(e.message,'bad')}}
+
+/* ================= المشتركون ================= */
+let CURU=null;
+async function findUser(){const id=$('uQ').value.trim();if(!/^[\w.\-@]{1,64}$/.test(id))return toast('External ID غير صالح','bad');
+ try{needApp();$('uBox').innerHTML='<span class="spin"></span>';const r=await os('GET','/apps/'+S.appId+'/users/by/external_id/'+encodeURIComponent(id));CURU={id,r};drawUser()}
+ catch(e){$('uBox').innerHTML=`<p style="color:var(--err)">${esc(e.message)}</p>`}}
+function drawUser(){const r=CURU.r,pr=r.properties||{},subs=r.subscriptions||[];
+ $('uBox').innerHTML=`<div class="grid g2"><div><h3>الخصائص</h3><p>اللغة: ${esc(pr.language||'—')} · الدولة: ${esc(pr.country||'—')} · المنطقة: ${esc(pr.timezone_id||'—')}</p><p>أول جلسة: ${fmt(toMs(pr.first_active*1000))} · آخر نشاط: ${fmt(toMs(pr.last_active*1000))}</p>
+ <label>الوسوم (JSON — null يحذف وسمًا)</label><textarea id="uTags" dir="ltr">${esc(JSON.stringify(pr.tags||{},null,1))}</textarea>
+ <div class="row"><button class="btn" onclick="saveUser()">تحديث الوسوم</button><button class="btn dng" onclick="delUser()">حذف المستخدم</button></div></div>
+ <div><h3>الاشتراكات</h3><table><thead><tr><th>النوع</th><th>مفعّل</th><th></th></tr></thead><tbody>${subs.map(s=>`<tr><td>${esc(s.type)}<br><code>${esc(s.id)}</code></td><td>${esc(s.enabled)}</td><td><button class="btn sec sm" onclick="togSub('${esc(s.id)}',${!s.enabled})">${s.enabled?'إلغاء الاشتراك':'تفعيل'}</button></td></tr>`).join('')||'<tr><td colspan=3 class="hint">لا اشتراكات.</td></tr>'}</tbody></table></div></div>`}
+async function saveUser(){let t;try{t=JSON.parse($('uTags').value);if(typeof t!=='object'||Array.isArray(t))throw 0}catch(e){return toast('JSON غير صالح','bad')}
+ if(!await confirmDlg('تحديث الوسوم','<p>سيُحدَّث المستخدم <code>'+esc(CURU.id)+'</code> في OneSignal.</p>'))return;
+ try{await os('PATCH','/apps/'+S.appId+'/users/by/external_id/'+encodeURIComponent(CURU.id),{properties:{tags:t}});toast('تم التحديث','ok');log('تحديث مستخدم',CURU.id,'نجاح');findUser()}catch(e){toast(e.message,'bad');log('تحديث مستخدم',CURU.id,'فشل',e.code,e.message)}}
+async function delUser(){if(!await confirmDlg('حذف مستخدم','<p>سيُحذف المستخدم وكل اشتراكاته من OneSignal. لا رجعة.</p><code>'+esc(CURU.id)+'</code>'))return;
+ try{await os('DELETE','/apps/'+S.appId+'/users/by/external_id/'+encodeURIComponent(CURU.id));toast('تم الحذف','ok');log('حذف مستخدم',CURU.id,'نجاح');$('uBox').innerHTML=''}catch(e){toast(e.message,'bad');log('حذف مستخدم',CURU.id,'فشل',e.code,e.message)}}
+async function togSub(id,en){if(!await confirmDlg(en?'تفعيل اشتراك':'إلغاء اشتراك','<code>'+esc(id)+'</code>'))return;
+ try{await os('PATCH','/apps/'+S.appId+'/subscriptions/'+encodeURIComponent(id),{subscription:{enabled:en}});toast('تم','ok');log('تغيير اشتراك',id,'نجاح');findUser()}catch(e){toast(e.message,'bad');log('تغيير اشتراك',id,'فشل',e.code,e.message)}}
+
+/* ================= GitHub ================= */
+let GF=null;
+function drawGh(){const g=S.gh||{};$('gR').value=g.repo||'';$('gBr').value=g.branch||'main';$('gP1').value=g.p1||'index.html';$('gP2').value=g.p2||'admin.html';
+ $('ghSt').innerHTML=(S.proxy||S.sbUrl||DK.gh)?'<span class="st setup">يحتاج وسيطًا يحمل التوكن</span>':'<span class="st no">غير مفعّل — لا وسيط</span>';drawGhHist()}
+function saveGh(){const r=$('gR').value.trim();if(r&&!/^[\w.\-]+\/[\w.\-]+$/.test(r))return toast('صيغة المستودع owner/name','bad');
+ S.gh={repo:r,branch:$('gBr').value.trim()||'main',p1:$('gP1').value.trim(),p2:$('gP2').value.trim()};persist();toast('حُفظت إعدادات المستودع (بدون أسرار)','ok')}
+const ghQ=p=>`?repo=${encodeURIComponent(S.gh.repo)}&branch=${encodeURIComponent(S.gh.branch)}&path=${encodeURIComponent(p)}`;
+async function ghLoad(k,keep){saveGh();if(!S.gh.repo)return toast('أدخل المستودع','bad');const path=S.gh[k==='gP1'?'p1':'p2'];if(!path||/\.\.|^\//.test(path))return toast('مسار غير صالح','bad');
+ try{const r=await api('GET','/github/file'+ghQ(path));if(!r||!r.sha||typeof r.content!=='string')throw mkErr('BAD','استجابة غير متوقعة من الوسيط');
+  GF={path,sha:r.sha,orig:r.content};$('ghEd').style.display='';$('ghPath').textContent=path;$('ghTxt').value=r.content;
+  $('ghMeta').textContent='SHA: '+r.sha.slice(0,10)+(r.commit?' · آخر Commit: '+(r.commit.message||'')+' ('+(r.commit.date||'')+')':'');if(!keep)$('ghRes').textContent='';toast(keep?'أُعيد تحميل الملف بعد الحفظ':'تم تحميل الملف من GitHub','ok')}
+ catch(e){toast('تعذر التحميل: '+e.message,'bad')}}
+const ghReload=keep=>{if(GF)ghLoad(GF.path===S.gh.p1?'gP1':'gP2',keep===true)};
+async function ghSave(){if(!GF)return;const txt=$('ghTxt').value,msg=$('ghMsg').value.trim();
+ if(txt===GF.orig)return toast('لا توجد تغييرات','bad');if(!msg)return toast('رسالة الـ Commit مطلوبة','bad');
+ if(/(rest_api_key|ghp_[A-Za-z0-9]{20,}|github_pat_|Key\s+[A-Za-z0-9]{30,})/i.test(txt))return toast('رُفض الحفظ: يبدو أن المحتوى يحتوي سرًّا/مفتاحًا.','bad');
+ const a=GF.orig.split('\n'),b=txt.split('\n');let ch=0;for(let i=0;i<Math.max(a.length,b.length);i++)if(a[i]!==b[i])ch++;
+ if(!await confirmDlg('معاينة وتأكيد النشر','<p>الملف: <code>'+esc(GF.path)+'</code> · الفرع: <code>'+esc(S.gh.branch)+'</code></p><p>الأسطر: '+a.length+' ← '+b.length+' · أسطر متغيّرة تقريبًا: '+ch+'</p><p class="hint">'+esc(msg)+'</p>'))return;
+ try{const r=await api('PUT','/github/file',{repo:S.gh.repo,branch:S.gh.branch,path:GF.path,content:txt,sha:GF.sha,message:msg});
+  if(!r||!r.commit||!r.commit.sha)throw mkErr('NO_COMMIT','لم يُرجع GitHub بيانات Commit — لا يُعتبر الحفظ ناجحًا.');
+  GF.orig=txt;GF.sha=r.content_sha||GF.sha;$('ghRes').textContent='تم الحفظ — Commit '+r.commit.sha.slice(0,8)+(r.commit.url?' · '+r.commit.url:'');toast('تم الحفظ في GitHub','ok');ghHist({path:GF.path,sha:r.commit.sha,msg,ok:true});log('نشر GitHub',GF.path,'نجاح');ghReload(true)}
+ catch(e){const conflict=/409|422/.test(e.code||'');$('ghRes').textContent=(conflict?'تعارض: تغيّر الملف على GitHub منذ تحميله. أعد التحميل ثم دمج تعديلاتك. ':'')+e.message;toast('فشل الحفظ: '+e.message,'bad');ghHist({path:GF.path,msg,ok:false,err:e.message});log('نشر GitHub',GF.path,'فشل',e.code,e.message)}}
+let GH=jget('osl_ghhist',[]);function ghHist(x){GH.unshift({...x,t:Date.now()});GH=GH.slice(0,30);jset('osl_ghhist',GH);drawGhHist()}
+function drawGhHist(){$('ghHist').innerHTML=`<table><thead><tr><th>الوقت</th><th>الملف</th><th>النتيجة</th><th>Commit/خطأ</th></tr></thead><tbody>${GH.map(x=>`<tr><td>${fmt(x.t)}</td><td>${esc(x.path)}</td><td>${x.ok?'✓':'✗'}</td><td>${esc(x.ok?(x.sha||'').slice(0,8):x.err)}</td></tr>`).join('')||'<tr><td colspan=4 class="hint">لا عمليات.</td></tr>'}</tbody></table>`}
+drawFail();
+</script>
+</body>
+</html>

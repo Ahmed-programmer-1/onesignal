@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OneSignal Notification Lab</title>
+<meta name="description" content="موقع تجريبي يحاكي منصة فيديو لاختبار إشعارات OneSignal">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<!-- OneSignal Web SDK v16 (الإصدار الحالي) -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--card:#1c2330;--line:#2b3445;--tx:#e6edf3;--mut:#8b98a9;--pri:#5b8cff;--pri2:#7c5cff;--ok:#2ea66a;--warn:#e3a33b;--err:#e5584f;--r:14px}
+:root[data-theme=light]{--bg:#f4f6fb;--bg2:#fff;--card:#fff;--line:#dfe4ee;--tx:#18202e;--mut:#5d6a7e}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:'Tajawal',system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+a{color:inherit}
+header.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem}
+.logo i{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--pri),var(--pri2));display:grid;place-items:center;font-style:normal}
+.tag-demo{font-size:.7rem;background:var(--warn);color:#201500;padding:2px 8px;border-radius:99px;font-weight:700}
+.sp{flex:1}
+.ib{position:relative;width:40px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font-size:1.1rem}
+.ib .dot{position:absolute;top:-4px;inset-inline-start:-4px;background:var(--err);color:#fff;font-size:.65rem;min-width:18px;height:18px;border-radius:99px;display:none;place-items:center;padding:0 4px}
+.menu-btn{display:none}
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100% - 61px)}
+nav.side{background:var(--bg2);border-inline-end:1px solid var(--line);padding:14px;position:sticky;top:61px;height:calc(100vh - 61px);overflow:auto}
+nav.side a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--mut);margin-bottom:4px}
+nav.side a.on,nav.side a:hover{background:var(--card);color:var(--tx)}
+main{padding:20px;max-width:1200px;width:100%;min-width:0}
+code{overflow-wrap:anywhere;word-break:break-word}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:18px}
+.sub-box{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:99px;font-size:.82rem;font-weight:700;border:1px solid var(--line)}
+.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.no{color:var(--warn);border-color:var(--warn)}.badge.bad{color:var(--err);border-color:var(--err)}
+.btn{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;padding:9px 18px;border-radius:10px;font-weight:700}
+.btn.sec{background:var(--bg2);color:var(--tx);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.hint{color:var(--mut);font-size:.85rem}
+.msg{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.9rem;border:1px solid var(--line);display:none}
+.msg.show{display:block}.msg.err{border-color:var(--err);color:var(--err)}.msg.warn{border-color:var(--warn);color:var(--warn)}
+h2{font-size:1.2rem;margin:6px 0 12px}
+.hero{border-radius:var(--r);padding:26px;min-height:210px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;background:linear-gradient(135deg,#243b8a,#6b3fd1);color:#fff;margin-bottom:22px;position:relative;overflow:hidden}
+.hero h1{font-size:1.7rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:24px}
+.vc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:.15s}
+.vc:hover{transform:translateY(-3px);border-color:var(--pri)}
+.th{aspect-ratio:16/9;display:grid;place-items:center;font-size:2rem;color:#fff}
+.vc .in{padding:12px}.vc h3{font-size:1rem}.vc p{font-size:.85rem;color:var(--mut)}.vc .ch{font-size:.8rem;color:var(--pri);margin-top:6px}
+.modal{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:60;padding:16px}
+.modal.open{display:grid}
+.modal .box{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);width:min(720px,100%);max-height:90vh;overflow:auto;padding:16px}
+.modal video{width:100%;border-radius:10px;background:#000}
+.inbox{position:fixed;top:64px;inset-inline-end:12px;width:min(380px,calc(100% - 24px));max-height:70vh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:14px;z-index:50;display:none;box-shadow:0 12px 40px #0006}
+.inbox.open{display:block}
+.nt{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px;cursor:pointer;background:var(--card)}
+.nt b{display:block}.nt small{color:var(--mut)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+input,select{font:inherit;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.debug{font-family:ui-monospace,monospace;font-size:.78rem;direction:ltr;text-align:left;color:var(--mut);white-space:pre-wrap;max-height:130px;overflow:auto}
+@media(max-width:820px){.layout{grid-template-columns:1fr}nav.side{position:fixed;top:61px;inset-inline-start:0;width:240px;z-index:40;transform:translateX(100%);transition:.2s;visibility:hidden}[dir=rtl] nav.side{transform:translateX(100%)}nav.side.open{transform:none!important;visibility:visible}.menu-btn{display:grid}.hero h1{font-size:1.3rem}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="ib menu-btn" id="menuBtn" aria-label="القائمة">☰</button>
+  <div class="logo"><i>▶</i><span>OneSignal Notification Lab</span><span class="tag-demo">تجريبي</span></div>
+  <div class="sp"></div>
+  <button class="ib" id="themeBtn" aria-label="تبديل السمة">◐</button>
+  <button class="ib" id="bellBtn" aria-label="الإشعارات">🔔<span class="dot" id="bellDot">0</span></button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="side">
+    <a href="#home" class="on" data-sec="home">🏠 الرئيسية</a>
+    <a href="#featured" data-sec="featured">⭐ فيديوهات مميزة</a>
+    <a href="#latest" data-sec="latest">🆕 أحدث الفيديوهات</a>
+    <a href="#popular" data-sec="popular">🔥 الأكثر مشاهدة</a>
+    <a href="#notif" data-sec="notif">🔔 إعدادات الإشعارات</a>
+    <p class="hint" style="margin-top:14px">كل المحتوى هنا تجريبي لاختبار OneSignal فقط.</p>
+  </nav>
+
+  <main>
+    <section id="home">
+      <div class="hero" id="hero">
+        <span class="tag-demo" style="align-self:flex-start">محتوى تجريبي</span>
+        <h1>منصة فيديو مصغّرة لاختبار الإشعارات</h1>
+        <p>اشترك في الإشعارات ثم أرسل حملة من لوحة الإدارة لترى النتيجة هنا.</p>
+      </div>
+    </section>
+
+    <section id="notif" class="panel">
+      <h2>الاشتراك في الإشعارات</h2>
+      <div class="sub-box">
+        <span class="badge" id="stBadge">جارٍ الفحص…</span>
+        <button class="btn" id="subBtn" disabled>تفعيل الإشعارات</button>
+        <button class="btn sec" id="unsubBtn" style="display:none">إيقاف الإشعارات</button>
+      </div>
+      <div class="msg" id="stMsg"></div>
+      <div class="row" id="appIdRow" style="display:none">
+        <input id="appIdInp" placeholder="OneSignal App ID (UUID)" style="min-width:280px;direction:ltr">
+        <button class="btn sec" id="appIdSave">حفظ App ID</button>
+      </div>
+      <p class="hint" style="margin-top:10px">يتطلب Web Push عنوان HTTPS صالحًا (أو localhost للاختبار) وملف Service Worker في جذر الموقع — راجع التعليمات أسفل الصفحة.</p>
+      <details style="margin-top:10px"><summary class="hint">سجل التشخيص</summary><div class="debug" id="dbg"></div></details>
+    </section>
+
+    <section id="featured"><h2>فيديوهات مميزة</h2><div class="grid" id="gFeatured"></div></section>
+    <section id="latest"><h2>أحدث الفيديوهات</h2><div class="grid" id="gLatest"></div></section>
+    <section id="popular"><h2>الأكثر مشاهدة</h2><div class="grid" id="gPopular"></div></section>
+
+    <section class="panel">
+      <h2>إعداد OneSignal المطلوب</h2>
+      <ol class="hint" style="padding-inline-start:20px;line-height:2">
+        <li>أنشئ تطبيق Web Push في OneSignal وأدخل عنوان موقعك (HTTPS) ثم انسخ <b>App ID</b> إلى المتغير <code>APP_ID</code> في أعلى سكربت هذه الصفحة (أو أدخله في الحقل أعلاه للتجربة).</li>
+        <li>ارفع ملف <code>OneSignalSDKWorker.js</code> إلى جذر الموقع ومحتواه سطر واحد: <code dir="ltr">importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");</code> — هذا الملف مطلوب من المتصفح ولا يمكن تضمينه داخل HTML.</li>
+        <li>لا تعمل الإشعارات من <code>file://</code>. استخدم HTTPS أو <code>localhost</code> (مفعّل هنا تلقائيًا للاختبار).</li>
+        <li>النقر على الإشعار يفتح الرابط المحدد فيه. الإشعارات المعروضة في الصندوق هي ما وصل والصفحة مفتوحة فقط.</li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<div class="inbox" id="inbox">
+  <b>إشعارات وصلت أثناء فتح الموقع</b>
+  <div id="inboxList"><p class="hint" style="margin-top:8px">لا توجد إشعارات بعد.</p></div>
+  <div class="row"><button class="btn sec" id="clearInbox">مسح القائمة</button></div>
+</div>
+
+<div class="modal" id="vm"><div class="box">
+  <h3 id="vmT"></h3><p class="hint" id="vmD"></p>
+  <video id="vmV" controls playsinline></video>
+  <div class="row"><button class="btn sec" id="vmX">إغلاق</button></div>
+</div></div>
+
+<script>
+/* ===== إعداد عام (App ID قيمة عامة وليست سرًّا) ===== */
+const APP_ID = "b68d3064-f5c0-446f-b0e3-9733b0d291ee"; // قيمة عامة (ليست سرًّا)
+const SAMPLE = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/";
+const VIDEOS = [
+ {id:1,t:"أرنب كبير",d:"فيلم قصير مفتوح المصدر للاختبار.",c:"قناة المختبر",f:"BigBuckBunny.mp4",g:["#ff7a59","#ffb84d"],s:"featured",v:9800},
+ {id:2,t:"أحلام الفيل",d:"عرض تجريبي لأحد أفلام Blender.",c:"قناة الرسوم",f:"ElephantsDream.mp4",g:["#2b6cb0","#63b3ed"],s:"featured",v:7400},
+ {id:3,t:"هروب",d:"مقطع قصير مناسب لاختبار التشغيل.",c:"قناة الأكشن",f:"ForBiggerEscapes.mp4",g:["#6b46c1","#d53f8c"],s:"latest",v:3100},
+ {id:4,t:"مرح أكبر",d:"فيديو تجريبي قصير.",c:"قناة المرح",f:"ForBiggerFun.mp4",g:["#2f855a","#9ae6b4"],s:"latest",v:2600},
+ {id:5,t:"انفجارات أكبر",d:"محتوى تجريبي لاختبار البطاقات.",c:"قناة الأكشن",f:"ForBiggerBlazes.mp4",g:["#c53030","#fc8181"],s:"popular",v:15200},
+ {id:6,t:"رحلات أكبر",d:"محتوى تجريبي للأكثر مشاهدة.",c:"قناة السفر",f:"ForBiggerJoyrides.mp4",g:["#b7791f","#f6e05e"],s:"popular",v:12900},
+ {id:7,t:"سباق التجريب",d:"مقطع مختصر لاختبار الشبكة.",c:"قناة المختبر",f:"ForBiggerMeltdowns.mp4",g:["#319795","#81e6d9"],s:"latest",v:1800},
+ {id:8,t:"سبرايت فرايت",d:"فيلم قصير للاختبار.",c:"قناة الرسوم",f:"SubaruOutbackOnStreetAndDirt.mp4",g:["#4a5568","#a0aec0"],s:"popular",v:11000}
+];
+const $=id=>document.getElementById(id);
+const dbg=m=>{const e=$('dbg');e.textContent=`[${new Date().toLocaleTimeString()}] ${m}\n`+e.textContent.slice(0,3000)};
+let OS=null, ready=false;
+
+/* ===== الواجهة ===== */
+function card(v){const el=document.createElement('div');el.className='vc';
+ el.innerHTML=`<div class="th" style="background:linear-gradient(135deg,${v.g[0]},${v.g[1]})">▶</div><div class="in"><h3></h3><p></p><div class="ch"></div></div>`;
+ el.querySelector('h3').textContent=v.t;el.querySelector('p').textContent=v.d;
+ el.querySelector('.ch').textContent=`${v.c} · ${v.v.toLocaleString('ar-EG')} مشاهدة · (تجريبي)`;
+ el.onclick=()=>{$('vmT').textContent=v.t;$('vmD').textContent=v.d;$('vmV').src=SAMPLE+v.f;$('vm').classList.add('open');
+  tagSection(v.s)};return el}
+function render(){[['featured','gFeatured'],['latest','gLatest'],['popular','gPopular']].forEach(([s,g])=>{
+ const box=$(g);box.innerHTML='';let list=VIDEOS.filter(v=>v.s===s);
+ if(s==='popular')list=[...VIDEOS].sort((a,b)=>b.v-a.v).slice(0,4);
+ list.forEach(v=>box.appendChild(card(v)))})}
+render();
+$('vmX').onclick=()=>{$('vmV').pause();$('vmV').removeAttribute('src');$('vm').classList.remove('open')};
+$('menuBtn').onclick=()=>$('side').classList.toggle('open');
+document.querySelectorAll('nav.side a').forEach(a=>a.onclick=()=>{
+ document.querySelectorAll('nav.side a').forEach(x=>x.classList.remove('on'));a.classList.add('on');$('side').classList.remove('open');
+ tagSection(a.dataset.sec,true)});
+$('themeBtn').onclick=()=>{const r=document.documentElement;const n=r.dataset.theme==='light'?'dark':'light';r.dataset.theme=n;try{localStorage.setItem('osl_theme',n)}catch(e){}};
+try{const t=localStorage.getItem('osl_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
+
+/* ===== صندوق الإشعارات (محلي: ما وصل والصفحة مفتوحة فقط) ===== */
+let inbox=[];try{inbox=JSON.parse(sessionStorage.getItem('osl_inbox')||'[]')}catch(e){}
+function drawInbox(){const l=$('inboxList');l.innerHTML='';
+ if(!inbox.length){l.innerHTML='<p class="hint" style="margin-top:8px">لا توجد إشعارات بعد.</p>'}
+ inbox.forEach(n=>{const d=document.createElement('div');d.className='nt';
+  const b=document.createElement('b');b.textContent=n.title||'(بدون عنوان)';const p=document.createElement('div');p.textContent=n.body||'';
+  const s=document.createElement('small');s.textContent=new Date(n.at).toLocaleString('ar-EG');d.append(b,p,s);
+  if(n.url&&/^https?:\/\//i.test(n.url))d.onclick=()=>window.open(n.url,'_blank','noopener');l.appendChild(d)});
+ const dot=$('bellDot');dot.textContent=inbox.length;dot.style.display=inbox.length?'grid':'none';
+ try{sessionStorage.setItem('osl_inbox',JSON.stringify(inbox.slice(0,30)))}catch(e){}}
+function pushInbox(n){inbox.unshift(n);drawInbox()}
+$('bellBtn').onclick=()=>$('inbox').classList.toggle('open');
+$('clearInbox').onclick=()=>{inbox=[];drawInbox()};drawInbox();
+
+/* ===== حالة الاشتراك ===== */
+function setMsg(t,k){const m=$('stMsg');if(!t){m.className='msg';return}m.textContent=t;m.className='msg show '+(k||'')}
+function setBadge(txt,k){const b=$('stBadge');b.textContent=txt;b.className='badge '+(k||'')}
+async function refresh(){
+ if(!OS)return;
+ try{
+  if(!OS.Notifications.isPushSupported()){setBadge('غير مدعوم','bad');setMsg('هذا المتصفح أو هذا السياق لا يدعم إشعارات الويب (جرّب Chrome/Edge/Firefox على HTTPS).','err');$('subBtn').disabled=true;return}
+  const perm=OS.Notifications.permission, opted=OS.User.PushSubscription.optedIn;
+  $('unsubBtn').style.display=opted?'':'none';$('subBtn').style.display=opted?'none':'';
+  if(opted){setBadge('مشترك ✓','ok');setMsg('');await onSubscribed()}
+  else if(perm===false&&Notification.permission==='denied'){setBadge('غير مشترك (الإذن مرفوض)','bad');setMsg('رفضتَ الإذن. لتفعيله غيّر إعدادات الموقع في المتصفح (قفل العنوان ← الإشعارات ← سماح) ثم أعد تحميل الصفحة.','warn');$('subBtn').disabled=true}
+  else{setBadge('غير مشترك','no');setMsg('');$('subBtn').disabled=false}
+ }catch(e){dbg('refresh error: '+e);setBadge('تعذر الفحص','bad');setMsg('تعذر قراءة حالة الاشتراك: '+(e.message||e),'err')}
+}
+let tagged=false;
+async function onSubscribed(){
+ if(tagged)return;tagged=true;
+ try{ // وسوم غير حساسة، بعد موافقة المستخدم فقط
+  let b=localStorage.getItem('osl_ab');if(b===null){b=String(Math.floor(Math.random()*100));localStorage.setItem('osl_ab',b)}
+  OS.User.addTags({ab_bucket:b,site:'notification-lab'});
+  if(OS.User.setLanguage)OS.User.setLanguage('ar');
+  dbg('tags set: ab_bucket='+b);
+ }catch(e){dbg('tag error: '+e)}
+}
+function tagSection(s,navOnly){ // تسجيل آخر قسم زاره المشترك (وسم last_section)
+ try{if(OS&&OS.User.PushSubscription.optedIn){OS.User.addTag('last_section',s);dbg('tag last_section='+s)}}catch(e){dbg('tag error: '+e)}}
+
+$('subBtn').onclick=async()=>{
+ if(!OS)return;$('subBtn').disabled=true;setMsg('');
+ try{await OS.Notifications.requestPermission();await new Promise(r=>setTimeout(r,600));
+  if(!OS.User.PushSubscription.optedIn&&Notification.permission==='granted')await OS.User.PushSubscription.optIn();
+ }catch(e){dbg('subscribe error: '+e);setMsg('تعذر الاشتراك: '+(e.message||e),'err')}
+ $('subBtn').disabled=false;refresh()};
+$('unsubBtn').onclick=async()=>{try{await OS.User.PushSubscription.optOut();tagged=false}catch(e){setMsg('تعذر إيقاف الاشتراك: '+(e.message||e),'err')}refresh()};
+
+/* ===== تهيئة OneSignal ===== */
+let appId=APP_ID;try{appId=APP_ID||localStorage.getItem('osl_app_id')||''}catch(e){}
+const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+if(!uuid.test(appId)){
+ setBadge('يحتاج إعداد','no');setMsg('لم يُضبط OneSignal App ID بعد. أدخله أدناه (قيمة عامة) أو ضعه في المتغير APP_ID. لن يظهر أي اشتراك قبل ذلك.','warn');
+ $('appIdRow').style.display='flex';
+ $('appIdSave').onclick=()=>{const v=$('appIdInp').value.trim();if(!uuid.test(v)){setMsg('App ID غير صالح (يجب أن يكون UUID).','err');return}
+  try{localStorage.setItem('osl_app_id',v);location.reload()}catch(e){setMsg('تعذر الحفظ محليًا.','err')}};
+}else{
+ window.OneSignalDeferred=window.OneSignalDeferred||[];
+ OneSignalDeferred.push(async function(OneSignal){
+  try{
+   // الموقع على مسار فرعي (GitHub Pages: /onesignal/) فالـ Service Worker يجب أن يكون بجوار الصفحة بنفس النطاق
+   const swBase=location.pathname.replace(/[^/]*$/,'');
+   await OneSignal.init({appId, allowLocalhostAsSecureOrigin:true,
+    serviceWorkerPath:swBase.slice(1)+'OneSignalSDKWorker.js',
+    serviceWorkerParam:{scope:swBase},
+    notifyButton:{enable:false}});
+   OS=OneSignal;ready=true;dbg('OneSignal initialized');
+   // استقبال الإشعارات أثناء فتح الصفحة
+   OS.Notifications.addEventListener('foregroundWillDisplay',ev=>{
+     const n=ev.notification;dbg('foreground notification '+(n.notificationId||''));
+     pushInbox({title:n.title,body:n.body,url:n.launchURL,at:Date.now()})});
+   OS.Notifications.addEventListener('click',ev=>{dbg('notification clicked: '+(ev.notification.notificationId||''));
+     const n=ev.notification;pushInbox({title:n.title,body:n.body,url:n.launchURL,at:Date.now()})});
+   OS.Notifications.addEventListener('permissionChange',()=>refresh());
+   OS.User.PushSubscription.addEventListener('change',()=>refresh());
+   const ext=new URLSearchParams(location.search).get('external_id');
+   if(ext&&/^[\w.\-@]{1,64}$/.test(ext)){await OS.login(ext);dbg('login external_id='+ext)}
+   await refresh();
+  }catch(e){dbg('init error: '+e);setBadge('فشل الاتصال','bad');
+   setMsg('فشل تهيئة OneSignal: '+(e&&e.message||e)+' — تأكد من App ID ومن أن عنوان الموقع مطابق للمُسجَّل في OneSignal ومن وجود ملف الـ Service Worker.','err')}
+ });
+ setTimeout(()=>{if(!ready&&!$('stMsg').classList.contains('show')){setBadge('لم يُحمَّل SDK','bad');setMsg('لم يكتمل تحميل OneSignal SDK. قد يكون محجوبًا (مانع إعلانات/شبكة) أو أن الصفحة لا تعمل على HTTPS.','err')}},8000);
+}
+</script>
+</body>
+</html>
